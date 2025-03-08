@@ -1,0 +1,53 @@
+{
+  "name": "blockchain-mlm",
+  "version": "1.0.0",
+  "description": "Multi-Level Marketing smart contract on Polygon",
+  "main": "index.js",
+  "scripts": {
+    "compile": "hardhat compile",
+    "test": "hardhat test",
+    "test:verbose": "hardhat test --verbose",
+    "test:gas": "REPORT_GAS=true hardhat test",
+    "deploy:local": "hardhat run scripts/deploy.js --network localhost",
+    "deploy:mumbai": "hardhat run scripts/deploy.js --network mumbai",
+    "deploy:polygon": "hardhat run scripts/deploy.js --network polygon",
+    "deploy": "hardhat run scripts/deploy-all.js",
+    "verify:mumbai": "hardhat verify --network mumbai CONTRACT_ADDRESS",
+    "verify:polygon": "hardhat verify --network polygon CONTRACT_ADDRESS",
+    "node": "hardhat node",
+    "dev": "vite",
+    "build": "tsc && vite build",
+    "preview": "vite preview"
+  },
+  "keywords": [
+    "blockchain",
+    "mlm",
+    "polygon",
+    "ethereum",
+    "smart-contract"
+  ],
+  "author": "",
+  "license": "MIT",
+  "devDependencies": {
+    "@nomicfoundation/hardhat-chai-matchers": "^2.0.0",
+    "@nomicfoundation/hardhat-ethers": "^3.0.0",
+    "@nomicfoundation/hardhat-network-helpers": "^1.0.0",
+    "@nomicfoundation/hardhat-toolbox": "^3.0.0",
+    "@nomicfoundation/hardhat-verify": "^1.0.0",
+    "@types/node": "^20.4.0",
+    "autoprefixer": "^10.4.14",
+    "chai": "^4.3.7",
+    "dotenv": "^16.3.1",
+    "ethers": "^6.6.0",
+    "hardhat": "^2.16.0",
+    "hardhat-gas-reporter": "^1.0.9",
+    "postcss": "^8.4.24",
+    "solidity-coverage": "^0.8.4",
+    "tailwindcss": "^3.3.2",
+    "typescript": "^5.1.6",
+    "vite": "^4.3.9"
+  },
+  "dependencies": {
+    "flowbite": "^2.0.0"
+  }
+}
