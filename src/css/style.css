@@ -239,3 +239,27 @@ body {
   transform: translateY(-5px);
   box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
 }
+
+/* Add these styles for the wallet modal */
+#wallet-connect-modal-overlay {
+  animation: fadeIn 0.2s ease-out;
+}
+
+#wallet-connect-modal-overlay > div {
+  animation: scaleIn 0.2s ease-out;
+}
+
+@keyframes scaleIn {
+  from { transform: scale(0.95); opacity: 0; }
+  to { transform: scale(1); opacity: 1; }
+}
+
+/* Style for wallet options */
+.wallet-option {
+  transition: all 0.2s ease;
+}
+
+.wallet-option:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+}

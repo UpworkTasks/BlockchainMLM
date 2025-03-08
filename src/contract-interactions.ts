@@ -1,5 +1,7 @@
 import { ethers } from 'ethers';
-import type { UserDetails, LevelEarnings, NetworkConfig } from './types';
+import { UserDetails, LevelEarnings, NetworkConfig } from './types';
+import { showErrorToast, showSuccessToast, showInfoToast } from './components/toast-notification';
+import { showWalletConnectModal, getSelectedProvider } from './components/wallet-connector';
 
 // Contract ABI (simplified for common functions)
 const contractABI = [
@@ -20,28 +22,14 @@ const contractABI = [
   "event PaymentReceived(address indexed receiver, address indexed payer, uint8 level, uint256 amount, uint256 timestamp)"
 ];
 
-// Network configurations
+// Network configurations - Only Polygon mainnet now
 const networkConfigs: Record<string, NetworkConfig> = {
-  hardhat: {
-    chainId: 31337,
-    name: 'Hardhat Local',
-    rpcUrl: 'http://localhost:8545',
-    explorerUrl: '',
-    contractAddress: '0x5FbDB2315678afecb367f032d93F642f64180aa3' // Update to your deployment address
-  },
-  mumbai: {
-    chainId: 80001,
-    name: 'Mumbai Testnet',
-    rpcUrl: 'https://rpc-mumbai.maticvigil.com',
-    explorerUrl: 'https://mumbai.polygonscan.com',
-    contractAddress: '' // Add your Mumbai deployment address
-  },
   polygon: {
     chainId: 137,
     name: 'Polygon Mainnet',
     rpcUrl: 'https://polygon-rpc.com',
     explorerUrl: 'https://polygonscan.com',
-    contractAddress: '' // Add your Polygon mainnet deployment address
+    contractAddress: '0x09682E1B66797aA71F1735baCeA3d525883D3D58'  // Polygon mainnet deployment address
   }
 };
 
@@ -50,70 +38,153 @@ export class ContractInteractor {
   public provider: ethers.BrowserProvider | null = null;
   private signer: ethers.JsonRpcSigner | null = null;
   private contract: ethers.Contract | null = null;
-  private selectedNetwork: string = 'hardhat';
+  private selectedNetwork: string = 'polygon'; // Default to Polygon mainnet
 
   constructor() {
-    // Initialize provider if window.ethereum is available
-    if (typeof window !== 'undefined' && window.ethereum) {
-      this.provider = new ethers.BrowserProvider(window.ethereum);
-    }
+    // Provider will be set when a wallet is connected
   }
 
   async connectWallet(): Promise<string | null> {
+    // Keep track of whether we showed the loading overlay
+    let loadingOverlayDisplayed = false;
+    
     try {
-      if (!this.provider) {
-        console.error('Ethereum provider not available');
-        if (typeof window !== 'undefined' && window.ethereum) {
-          // Try reinitializing the provider
-          this.provider = new ethers.BrowserProvider(window.ethereum);
-        } else {
-          alert("MetaMask is not installed. Please install MetaMask to use this application.");
-          return null;
-        }
-      }
-
-      // Try/catch around the request to handle potential errors
-      try {
-        // Show a message about waiting for wallet connection
+      // Show wallet selection modal
+      const selectedAddress = await showWalletConnectModal();
+      
+      if (!selectedAddress) {
+        console.log('No wallet selected or connection canceled');
+        
+        // Ensure loading overlay is hidden
         const loadingOverlay = document.getElementById('loading-overlay');
-        if (loadingOverlay) loadingOverlay.style.display = 'flex';
-
-        await window.ethereum.request({ method: 'eth_requestAccounts' });
+        if (loadingOverlay) loadingOverlay.style.display = 'none';
         
-        // Wait a moment to ensure provider is ready
-        await new Promise(resolve => setTimeout(resolve, 500));
-        
+        return null;
+      }
+      
+      // Get the selected provider from the wallet connector
+      const walletProvider = getSelectedProvider();
+      
+      if (!walletProvider?.provider) {
+        showErrorToast("Selected wallet provider not available");
+        return null;
+      }
+      
+      // Set up provider with the selected wallet
+      this.provider = new ethers.BrowserProvider(walletProvider.provider);
+      
+      // Show a message about waiting for wallet connection (only if not already showing)
+      const loadingOverlay = document.getElementById('loading-overlay');
+      if (loadingOverlay && loadingOverlay.style.display !== 'flex') {
+        loadingOverlay.style.display = 'flex';
+        loadingOverlayDisplayed = true;
+      }
+      
+      // Ensure we're on Polygon network
+      await this.ensurePolygonNetwork();
+      
+      try {
+        // Get signer from provider
         this.signer = await this.provider.getSigner();
         const address = await this.signer.getAddress();
         
         await this.setupContract();
         
-        // Hide loading overlay
-        if (loadingOverlay) loadingOverlay.style.display = 'none';
+        // Hide loading overlay if we displayed it
+        if (loadingOverlayDisplayed && loadingOverlay) {
+          loadingOverlay.style.display = 'none';
+        }
         
+        showSuccessToast(`${walletProvider.name} wallet connected successfully`);
         return address;
       } catch (innerError) {
-        console.error('MetaMask connection rejected or failed:', innerError);
+        console.error('Wallet connection rejected or failed:', innerError);
         
-        // Hide loading overlay
-        const loadingOverlay = document.getElementById('loading-overlay');
-        if (loadingOverlay) loadingOverlay.style.display = 'none';
+        // Hide loading overlay if we displayed it
+        if (loadingOverlayDisplayed && loadingOverlay) {
+          loadingOverlay.style.display = 'none';
+        }
         
         if ((innerError as Error).message?.includes('User rejected')) {
-          alert("Wallet connection was rejected. Please try again and approve the connection request.");
+          showErrorToast("Wallet connection was rejected. Please try again and approve the connection request.");
         } else {
-          alert("Could not connect to your wallet. Please check that MetaMask is unlocked and try again.");
+          showErrorToast(`Could not connect to ${walletProvider.name}. Please check that your wallet is unlocked and try again.`);
         }
         return null;
       }
     } catch (error) {
       console.error('Error connecting wallet:', error);
       
-      // Hide loading overlay
+      // Hide loading overlay regardless of who showed it
       const loadingOverlay = document.getElementById('loading-overlay');
       if (loadingOverlay) loadingOverlay.style.display = 'none';
       
+      showErrorToast("Failed to connect wallet: " + (error instanceof Error ? error.message : "Unknown error"));
       return null;
+    }
+  }
+
+  // New method to ensure user is on Polygon network
+  async ensurePolygonNetwork(): Promise<boolean> {
+    try {
+      const network = networkConfigs.polygon;
+      // Use optional chaining to avoid errors if provider methods aren't available
+      const chainId = await window?.ethereum?.request?.({ method: 'eth_chainId' });
+      
+      if (!chainId) {
+        showErrorToast("Could not detect network. Please make sure your wallet is connected.");
+        return false;
+      }
+      
+      if (parseInt(chainId, 16) !== network.chainId) {
+        showInfoToast("Switching to Polygon network...");
+        
+        try {
+          // Safe access to wallet methods
+          if (!window?.ethereum?.request) {
+            showErrorToast("Wallet doesn't support network switching");
+            return false;
+          }
+          
+          await window.ethereum.request({
+            method: 'wallet_switchEthereumChain',
+            params: [{ chainId: `0x${network.chainId.toString(16)}` }]
+          });
+        } catch (switchError: any) {
+          // Network doesn't exist in wallet
+          if (switchError.code === 4902) {
+            try {
+              await window?.ethereum?.request({
+                method: 'wallet_addEthereumChain',
+                params: [{
+                  chainId: `0x${network.chainId.toString(16)}`,
+                  chainName: network.name,
+                  nativeCurrency: {
+                    name: 'MATIC',
+                    symbol: 'MATIC',
+                    decimals: 18
+                  },
+                  rpcUrls: [network.rpcUrl],
+                  blockExplorerUrls: [network.explorerUrl]
+                }]
+              });
+              
+              showSuccessToast("Polygon network added to wallet");
+            } catch (addError) {
+              showErrorToast("Failed to add Polygon network to wallet");
+              throw addError;
+            }
+          } else {
+            showErrorToast("Failed to switch to Polygon network");
+            throw switchError;
+          }
+        }
+      }
+      
+      return true;
+    } catch (error) {
+      console.error('Error ensuring Polygon network:', error);
+      return false;
     }
   }
 
@@ -139,58 +210,14 @@ export class ContractInteractor {
       return true;
     } catch (error) {
       console.error('Error setting up contract:', error);
+      showErrorToast("Failed to setup contract: " + (error instanceof Error ? error.message : "Unknown error"));
       return false;
     }
   }
 
-  async switchNetwork(networkName: string): Promise<boolean> {
-    try {
-      const network = networkConfigs[networkName];
-      if (!network) {
-        console.error(`Network ${networkName} not configured`);
-        return false;
-      }
-
-      this.selectedNetwork = networkName;
-      
-      if (this.provider && this.signer) {
-        // Request network switch in MetaMask
-        try {
-          await window.ethereum.request({
-            method: 'wallet_switchEthereumChain',
-            params: [{ chainId: `0x${network.chainId.toString(16)}` }]
-          });
-        } catch (switchError: any) {
-          // Network doesn't exist in wallet
-          if (switchError.code === 4902) {
-            await window.ethereum.request({
-              method: 'wallet_addEthereumChain',
-              params: [{
-                chainId: `0x${network.chainId.toString(16)}`,
-                chainName: network.name,
-                nativeCurrency: {
-                  name: 'MATIC',
-                  symbol: 'MATIC',
-                  decimals: 18
-                },
-                rpcUrls: [network.rpcUrl],
-                blockExplorerUrls: [network.explorerUrl]
-              }]
-            });
-          } else {
-            throw switchError;
-          }
-        }
-
-        await this.setupContract();
-        return true;
-      }
-
-      return false;
-    } catch (error) {
-      console.error('Error switching network:', error);
-      return false;
-    }
+  // Replace switchNetwork with a method that ensures Polygon network
+  async switchNetwork(): Promise<boolean> {
+    return this.ensurePolygonNetwork();
   }
 
   async getUserDetails(address: string): Promise<UserDetails | null> {
@@ -211,6 +238,7 @@ export class ContractInteractor {
       };
     } catch (error) {
       console.error('Error getting user details:', error);
+      showErrorToast("Failed to get user details: " + (error instanceof Error ? error.message : "Unknown error"));
       return null;
     }
   }
@@ -229,6 +257,7 @@ export class ContractInteractor {
       };
     } catch (error) {
       console.error('Error getting level earnings:', error);
+      showErrorToast("Failed to get level earnings: " + (error instanceof Error ? error.message : "Unknown error"));
       return null;
     }
   }
@@ -243,6 +272,7 @@ export class ContractInteractor {
       return await this.contract.getDirectReferrals(address);
     } catch (error) {
       console.error('Error getting direct referrals:', error);
+      showErrorToast("Failed to get referrals: " + (error instanceof Error ? error.message : "Unknown error"));
       return [];
     }
   }
@@ -257,6 +287,7 @@ export class ContractInteractor {
       return await this.contract.isLevelActive(address, level);
     } catch (error) {
       console.error('Error checking if level is active:', error);
+      showErrorToast("Failed to check level status: " + (error instanceof Error ? error.message : "Unknown error"));
       return false;
     }
   }
@@ -272,6 +303,7 @@ export class ContractInteractor {
       return Number(result);
     } catch (error) {
       console.error('Error getting total users:', error);
+      showErrorToast("Failed to get total users: " + (error instanceof Error ? error.message : "Unknown error"));
       return 0;
     }
   }
@@ -280,12 +312,14 @@ export class ContractInteractor {
     try {
       if (!this.contract) {
         console.error('Contract not initialized');
+        showErrorToast("Contract not initialized. Please connect your wallet.");
         return false;
       }
 
       // Check if user is already registered before attempting registration
       try {
         if (!this.signer) {
+          showErrorToast("Wallet not connected");
           return false;
         }
         
@@ -295,29 +329,110 @@ export class ContractInteractor {
         if (userDetails && userDetails.registered) {
           console.log('User is already registered');
           sessionStorage.setItem('isRegistered', 'true');
+          showInfoToast("You are already registered in the MLM system");
           return true; // Return true since the user is already in a valid registered state
         }
+        
+        // PRE-CHECK: Check if the user has enough balance to complete the registration
+        if (this.provider) {
+          try {
+            const balance = await this.provider.getBalance(address);
+            const requiredAmount = ethers.parseEther("200"); // 200 POL for registration
+            const estimatedGas = ethers.parseEther("0.01"); // Rough estimate for gas
+            const totalRequired = requiredAmount + estimatedGas;
+            
+            if (balance < totalRequired) {
+              const formattedRequired = ethers.formatEther(requiredAmount);
+              const formattedBalance = ethers.formatEther(balance);
+              
+              showErrorToast(
+                `Insufficient funds to register. You need at least ${formattedRequired} MATIC for registration plus gas.` +
+                ` Your current balance is ${formattedBalance} MATIC.`
+              );
+              return false;
+            }
+            
+            console.log(`User has sufficient balance: ${ethers.formatEther(balance)} MATIC`);
+          } catch (balanceError) {
+            console.error("Failed to check balance:", balanceError);
+            // Continue with transaction attempt even if balance check fails
+          }
+        }
+        
       } catch (checkError) {
         console.log('Error checking registration status:', checkError);
+        showErrorToast("Error checking registration status: " + (checkError instanceof Error ? checkError.message : "Unknown error"));
       }
 
       // If we get here, the user is not registered, so proceed with registration
-      const tx = await this.contract.register(referrerAddress, {
-        value: ethers.parseEther("200")  // Updated from 100 to 200 POL
-      });
-      await tx.wait();
+      showInfoToast("Please confirm the transaction in your wallet...");
       
-      // Update session storage upon successful registration
-      sessionStorage.setItem('isRegistered', 'true');
-      return true;
-    } catch (error) {
+      try {
+        // Explicitly set gas limit to avoid estimation failures
+        const gasLimit = 300000; // Safe gas limit for registration
+        
+        const tx = await this.contract.register(referrerAddress, {
+          value: ethers.parseEther("200"),
+          gasLimit: gasLimit
+        });
+        
+        showInfoToast("Transaction submitted, waiting for confirmation...");
+        await tx.wait();
+        
+        // Update session storage upon successful registration
+        sessionStorage.setItem('isRegistered', 'true');
+        showSuccessToast("Registration successful! Welcome to the MLM system.");
+        return true;
+      } catch (txError: any) {
+        // Extract and display the specific error message
+        console.error('Transaction error:', txError);
+        
+        // Improved error handling with more specific messages
+        if (txError.shortMessage?.includes("insufficient funds") || 
+            txError.message?.includes("insufficient funds") ||
+            txError.code === "INSUFFICIENT_FUNDS") {
+          showErrorToast(
+            "Registration failed: You don't have enough MATIC in your wallet. " +
+            "You need 200 MATIC for registration plus additional MATIC for gas fees."
+          );
+        } else if (txError.message?.includes("estimate gas") || txError.code === "CALL_EXCEPTION") {
+          // This is likely an insufficient funds error that wasn't caught by the normal checks
+          showErrorToast(
+            "Transaction failed during gas estimation. This usually means you have insufficient funds. " +
+            "Please make sure you have at least 200.1 MATIC in your wallet."
+          );
+        } else if (txError.shortMessage?.includes("gas required exceeds allowance")) {
+          showErrorToast("Registration failed: Gas estimation error. You may have insufficient funds to pay for gas fees.");
+        } else if (txError.shortMessage?.includes("User already registered") || 
+                  txError.message?.includes("User already registered")) {
+          showInfoToast("You are already registered in the MLM system");
+          sessionStorage.setItem('isRegistered', 'true');
+          return true;
+        } else if (txError.code === 4001 || txError.message?.includes("rejected")) {
+          showErrorToast("Registration transaction was rejected. Please try again when you're ready.");
+        } else {
+          // Show actual error message instead of generic one
+          showErrorToast(`Registration failed: ${txError.shortMessage || txError.message || "Unknown error"}`);
+        }
+        return false;
+      }
+    } catch (error: any) {
       console.error('Error registering user:', error);
       
-      // Check if it's the "already registered" error and handle it gracefully
-      if (error instanceof Error && error.message.includes("User already registered")) {
-        alert("You are already registered in the MLM system.");
+      // More specific error handling
+      if (error.message?.includes("User already registered")) {
+        showInfoToast("You are already registered in the MLM system");
         sessionStorage.setItem('isRegistered', 'true');
-        return true; // Return true because the user is in a valid registered state
+        return true;
+      } else if (error.message?.includes("insufficient funds") || error.code === "INSUFFICIENT_FUNDS") {
+        showErrorToast(
+          "Registration failed: Insufficient funds. " +
+          "You need 200 MATIC for registration plus gas fees (approximately 0.1 MATIC)."
+        );
+      } else if (error.code === 4001) {
+        showErrorToast("Transaction rejected. Please try again if you want to register.");
+      } else {
+        showErrorToast(`Registration failed: ${error.shortMessage || error.message || "Unknown error"}`);
       }
       
       return false;
@@ -328,17 +443,53 @@ export class ContractInteractor {
     try {
       if (!this.contract) {
         console.error('Contract not initialized');
+        showErrorToast("Contract not initialized. Please connect your wallet.");
         return false;
       }
 
       const levelPrice = await this.getLevelPrice(level);
-      const tx = await this.contract.buyLevel(level, {
-        value: levelPrice
-      });
-      await tx.wait();
-      return true;
-    } catch (error) {
+      
+      showInfoToast(`Please confirm the transaction to buy level ${level}...`);
+      
+      try {
+        const tx = await this.contract.buyLevel(level, {
+          value: levelPrice
+        });
+        
+        showInfoToast("Transaction submitted, waiting for confirmation...");
+        await tx.wait();
+        
+        showSuccessToast(`Successfully purchased level ${level}!`);
+        return true;
+      } catch (txError: any) {
+        console.error('Error during level purchase transaction:', txError);
+        
+        if (txError.shortMessage?.includes("insufficient funds") || 
+            txError.message?.includes("insufficient funds")) {
+          showErrorToast(`Failed to purchase level ${level}: Insufficient funds in your wallet. This level costs ${ethers.formatEther(levelPrice)} MATIC.`);
+        } else if (txError.code === 4001 || txError.message?.includes("rejected")) {
+          showErrorToast("Transaction was rejected. You can try again when you're ready.");
+        } else if (txError.message?.includes("user already has this level")) {
+          showInfoToast(`You already own level ${level}`);
+          return true;
+        } else {
+          showErrorToast(`Failed to purchase level ${level}: ${txError.shortMessage || txError.message || "Unknown error"}`);
+        }
+        return false;
+      }
+    } catch (error: any) {
       console.error('Error buying level:', error);
+      
+      // More specific error messages
+      if (error.message?.includes("insufficient funds")) {
+        const formatted = ethers.formatEther(await this.getLevelPrice(level));
+        showErrorToast(`Failed to purchase level ${level}: You need at least ${formatted} MATIC to buy this level.`);
+      } else if (error.code === 4001) {
+        showErrorToast("Transaction was rejected. Please try again if you want to purchase the level.");
+      } else {
+        showErrorToast(`Failed to purchase level ${level}: ${error.shortMessage || error.message || "Unknown error"}`);
+      }
+      
       return false;
     }
   }
@@ -369,8 +520,9 @@ export class ContractInteractor {
     return `${address.substring(0, 6)}...${address.substring(address.length - 4)}`;
   }
 
+  // Update getCurrentNetwork to always return Polygon
   getCurrentNetwork(): NetworkConfig {
-    return networkConfigs[this.selectedNetwork];
+    return networkConfigs.polygon;
   }
 
   disconnectWallet(): void {
@@ -581,6 +733,32 @@ export class ContractInteractor {
     } catch (error) {
       console.error('Error getting current wallet address:', error);
       return null;
+    }
+  }
+
+  // Update getCurrentWalletInfo method to include wallet type
+  async getCurrentWalletInfo(): Promise<{address: string | null, type: string | null}> {
+    try {
+      if (!this.signer) {
+        return {
+          address: null,
+          type: null
+        };
+      }
+      
+      const address = await this.signer.getAddress();
+      const walletProvider = getSelectedProvider();
+      
+      return {
+        address: address,
+        type: walletProvider?.name || 'Unknown'
+      };
+    } catch (error) {
+      console.error('Error getting current wallet info:', error);
+      return {
+        address: null,
+        type: null
+      };
     }
   }
 }

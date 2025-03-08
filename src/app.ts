@@ -8,8 +8,12 @@ import { loadReferralsPage } from "./pages/referrals";
 import { loadEarningsPage } from "./pages/earnings";
 import { loadHowItWorks } from "./pages/how-it-works";
 import { loadFAQ } from "./pages/faq";
-import { loadAdminPage } from "./pages/admin"; // Import admin page
+import { loadAdminPage } from "./pages/admin";
 import { showLoadingOverlay, hideLoadingOverlay } from "./components/loading-overlay";
+import { getSelectedProvider } from './components/wallet-connector';
+import { showErrorToast } from './components/toast-notification';
+// Import types (including global Window interface extensions)
+import "./types";
 // Import debug helpers
 import "./debug-helpers";
 
@@ -33,7 +37,6 @@ const walletDropdown = document.getElementById("wallet-dropdown") as HTMLDivElem
 const walletCopyAddressBtn = document.getElementById("wallet-copy-address") as HTMLButtonElement;
 const walletViewExplorerBtn = document.getElementById("wallet-view-explorer") as HTMLButtonElement;
 const walletDisconnectBtn = document.getElementById("wallet-disconnect") as HTMLButtonElement;
-const networkSelect = document.getElementById("network-select") as HTMLSelectElement;
 const mainContent = document.getElementById("main-content")?.querySelector("main");
 const sidebarLinks = document.querySelectorAll("[data-page]");
 const toggleSidebarBtn = document.getElementById("toggleSidebarMobile") as HTMLButtonElement;
@@ -76,8 +79,8 @@ function setupEventListeners() {
   // Set up wallet dropdown and related functionality
   setupWalletElements();
   
-  // Network selection
-  networkSelect.addEventListener("change", handleNetworkChange);
+  // Remove network selection event listener - we only use Polygon mainnet now
+  // networkSelect?.addEventListener("change", handleNetworkChange);
   
   // Navigation
   sidebarLinks.forEach(link => {
@@ -106,22 +109,37 @@ function setupEventListeners() {
   });
 }
 
-// Connect to MetaMask wallet
+// Connect to wallet - with guaranteed overlay cleanup
 async function connectWallet() {
   try {
     // Show loading overlay while connecting
-    showLoadingOverlay("Connecting to wallet...");
+    showLoadingOverlay("Initializing wallet connection...");
     
-    currentUserAddress = await contractInteractor.connectWallet();
-    
-    // Hide loading overlay after connection attempt
-    hideLoadingOverlay();
+    try {
+      currentUserAddress = await contractInteractor.connectWallet();
+    } catch (error) {
+      console.error("Contract interactor wallet connection error:", error);
+      throw error; // Rethrow to be caught by the outer catch block
+    } finally {
+      // Always hide loading overlay after connection attempt
+      hideLoadingOverlay();
+    }
     
     if (currentUserAddress) {
+      // Get wallet type for UI
+      const walletProvider = getSelectedProvider();
+      const walletType = walletProvider?.name || "Wallet";
+      
       // Update UI to show connected wallet
       const shortenedAddress = await contractInteractor.getShortenedAddress(currentUserAddress);
       walletAddressSpan.textContent = shortenedAddress;
       fullWalletAddressEl.textContent = currentUserAddress;
+      
+      // Update wallet type indicator if available
+      const walletTypeIndicator = document.getElementById("wallet-type-indicator");
+      if (walletTypeIndicator) {
+        walletTypeIndicator.textContent = walletType;
+      }
       
       // Toggle visibility
       walletConnectBtn.classList.add("hidden");
@@ -132,11 +150,15 @@ async function connectWallet() {
       loadActivePage(); // Reload the active page with wallet info
     }
   } catch (error) {
-    // Hide loading overlay if there's an error
+    // Extra safety - ensure loading overlay is hidden
     hideLoadingOverlay();
     
     console.error("Failed to connect wallet:", error);
-    alert("Failed to connect wallet. Please make sure MetaMask is installed and unlocked.");
+    showErrorToast("Failed to connect wallet. Please make sure your wallet is installed and unlocked.");
+  } finally {
+    // Triple-check that loading overlay is gone
+    const loadingOverlay = document.getElementById('loading-overlay');
+    if (loadingOverlay) loadingOverlay.style.display = 'none';
   }
 }
 
@@ -181,15 +203,8 @@ function disconnectWallet() {
   loadActivePage();
 }
 
-// Handle network change
-async function handleNetworkChange(e: Event) {
-  const selectedNetwork = (e.target as HTMLSelectElement).value;
-  await contractInteractor.switchNetwork(selectedNetwork);
-  if (currentUserAddress) {
-    await checkUserRegistration();
-  }
-  loadActivePage();
-}
+// Remove or simplify the handleNetworkChange function since we only use Polygon mainnet
+
 
 // Toggle mobile sidebar
 function toggleSidebar() {
@@ -402,8 +417,7 @@ async function loadActivePage() {
 
 // Update navigation links
 async function updateNavLinks() {
-  // Get all sidebar links
-  const sidebarLinks = document.querySelectorAll("[data-page]");
+  // Get all sidebar links - RENAMED from sidebarLinks to navLinksElements to avoid shadowing
   
   // Check if current user is the contract owner
   let isOwner = false;
@@ -443,40 +457,5 @@ async function updateNavLinks() {
   }
 }
 
-// Update the dashboard to add an admin link for the owner
-async function loadUserData(contractInteractor: ContractInteractor, userAddress: string) {
-  try {
-    // ...existing code...
-    
-    // Check if user is owner
-    const ownerAddress = await contractInteractor.getOwner();
-    const isOwner = userAddress.toLowerCase() === ownerAddress.toLowerCase();
-    
-    // Update dashboard with owner badge if applicable
-    const statsContainer = document.getElementById("stats-container");
-    if (statsContainer && isOwner) {
-      // Add owner badge to stats container
-      const ownerBadge = document.createElement("div");
-      ownerBadge.className = "p-4 bg-red-50 rounded-lg border border-red-100";
-      ownerBadge.innerHTML = `
-        <div class="text-red-800 text-xl font-bold">Contract Owner</div>
-        <div class="text-sm text-gray-600">You have admin privileges</div>
-      `;
-      statsContainer.appendChild(ownerBadge);
-    }
-    
-    // ...existing code...
-  } catch (error) {
-    console.error("Error loading user data:", error);
-  }
-}
-
 // Initialize app
 document.addEventListener("DOMContentLoaded", init);
-
-// Add type for window.ethereum
-declare global {
-  interface Window {
-    ethereum: any;
-  }
-}

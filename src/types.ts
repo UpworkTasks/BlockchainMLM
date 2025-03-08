@@ -55,3 +55,12 @@ export interface UIState {
   isLoading: boolean;
   currentPage: string;
 }
+
+// Global type declarations
+declare global {
+  interface Window {
+    ethereum: any;
+    deficonnect?: any;
+    leap?: any;
+  }
+}

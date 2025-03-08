@@ -8,7 +8,27 @@
   <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
 </head>
 <body>
-  <!-- ...existing code... -->
+  <!-- Add this to the wallet button section - assuming there's an existing HTML structure -->
+  <div class="wallet-connect-area">
+    <button id="wallet-connect" class="inline-flex items-center px-4 py-2 bg-polygon-purple hover:bg-polygon-dark text-white rounded-lg focus:outline-none focus:ring-2 focus:ring-polygon-light">
+      <svg class="w-5 h-5 mr-2" fill="currentColor" viewBox="0 0 20 20" xmlns="http://www.w3.org/2000/svg">
+        <path fill-rule="evenodd" d="M3 5a2 2 0 012-2h10a2 2 0 012 2v8a2 2 0 01-2 2h-2.22l.123.489.804.804A1 1 0 0113 18H7a1 1 0 01-.707-1.707l.804-.804L7.22 15H5a2 2 0 01-2-2V5zm5.771 7H5V5h10v7H8.771z" clip-rule="evenodd"></path>
+      </svg>
+      Connect Wallet
+    </button>
+
+    <div id="wallet-connected-container" class="hidden relative">
+      <button id="wallet-connected" class="inline-flex items-center px-4 py-2 bg-gray-100 hover:bg-gray-200 text-gray-800 rounded-lg focus:outline-none focus:ring-2 focus:ring-gray-300">
+        <span id="wallet-type-indicator" class="mr-2 text-xs bg-green-100 text-green-800 px-2 py-0.5 rounded-full">Wallet</span>
+        <span id="wallet-address">0x0000...0000</span>
+        <svg class="w-4 h-4 ml-2" fill="currentColor" viewBox="0 0 20 20" xmlns="http://www.w3.org/2000/svg">
+          <path fill-rule="evenodd" d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z" clip-rule="evenodd"></path>
+        </svg>
+      </button>
+      
+      <!-- Existing dropdown content -->
+    </div>
+  </div>
   
   <!-- Your application bundle script -->
   <script src="bundle.js"></script>
