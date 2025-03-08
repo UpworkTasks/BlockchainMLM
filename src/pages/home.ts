@@ -56,7 +56,7 @@ export function loadHomePage(container: HTMLElement): void {
           
           <!-- Description -->
           <p class="mt-8 max-w-2xl mx-auto text-xl text-white text-opacity-90 text-center fade-in-up text-shadow-sm" style="animation-delay: 0.5s">
-            Join the next revolution in digital property ownership. Rent virtual NFT apartments, build your network, and create a passive income stream with our innovative MLM structure.
+            Join the next revolution in digital property ownership. Build your network with our powerful 3x8 matrix structure with spillover and create a passive income stream.
           </p>
           
           <!-- CTA Buttons -->
@@ -90,33 +90,33 @@ export function loadHomePage(container: HTMLElement): void {
         </div>
       </section>
 
-      <!-- Featured Properties Section -->
+      <!-- Investment Section -->
       <section class="relative py-20 lg:py-32 bg-white z-20">
         <div class="max-w-7xl mx-auto px-4">
           <div class="text-center mb-16">
-            <span class="px-4 py-1.5 text-sm font-semibold text-polygon-purple bg-polygon-ultralight rounded-full inline-block mb-3">INVESTMENT OPPORTUNITIES</span>
+            <span class="px-4 py-1.5 text-sm font-semibold text-polygon-purple bg-polygon-ultralight rounded-full inline-block mb-3">INVESTMENT OPPORTUNITY</span>
             <h2 class="text-3xl md:text-4xl lg:text-5xl font-extrabold text-gray-900 tracking-tight mb-6">
-              Premium Virtual Properties
+              Simple and Powerful Investment
             </h2>
             <p class="max-w-3xl mx-auto text-xl text-gray-600">
-              Invest in our exclusive collection of virtual properties and build your passive income network
+              Invest once and build your network with our 3x8 matrix structure with spillover system
             </p>
           </div>
 
-          <div class="grid grid-cols-1 md:grid-cols-3 gap-8">
-            <!-- Property Card 1 -->
-            <div class="property-card transform hover:-translate-y-2 transition-all duration-300">
+          <div class="flex justify-center">
+            <!-- Single Investment Card -->
+            <div class="property-card transform hover:-translate-y-2 transition-all duration-300 max-w-md w-full">
               <div class="overflow-hidden rounded-xl shadow-xl">
                 <div class="h-48 bg-gradient-to-r from-blue-500 to-indigo-600 relative">
                   <div class="absolute inset-0 bg-pattern-overlay opacity-20"></div>
                   <div class="p-6 h-full flex flex-col justify-between">
                     <div class="flex justify-between">
-                      <span class="bg-white bg-opacity-30 text-white text-xs px-2 py-1 rounded-full backdrop-blur-sm">LEVEL 1</span>
-                      <span class="bg-green-500 bg-opacity-90 text-white text-xs px-2 py-1 rounded-full backdrop-blur-sm">STARTER</span>
+                      <span class="bg-white bg-opacity-30 text-white text-xs px-2 py-1 rounded-full backdrop-blur-sm">ENTRY LEVEL</span>
+                      <span class="bg-green-500 bg-opacity-90 text-white text-xs px-2 py-1 rounded-full backdrop-blur-sm">ONE-TIME</span>
                     </div>
                     <div>
-                      <h3 class="text-2xl text-white font-bold text-shadow-sm">Luxury Apartment</h3>
-                      <p class="text-white text-opacity-90 text-sm">Begin your real estate journey</p>
+                      <h3 class="text-2xl text-white font-bold text-shadow-sm">Matrix Position</h3>
+                      <p class="text-white text-opacity-90 text-sm">Begin your earning journey</p>
                     </div>
                   </div>
                 </div>
@@ -127,76 +127,8 @@ export function loadHomePage(container: HTMLElement): void {
                       <p class="text-xl font-bold text-gray-800">200 POL</p>
                     </div>
                     <div class="text-right">
-                      <span class="text-sm font-medium text-gray-500">RETURN</span>
-                      <p class="text-xl font-bold text-green-600">300%</p>
-                    </div>
-                  </div>
-                  <button class="w-full mt-5 py-3 rounded-lg bg-polygon-purple text-white font-medium hover:bg-polygon-dark transition-all duration-300 shadow-md">
-                    Invest Now
-                  </button>
-                </div>
-              </div>
-            </div>
-            
-            <!-- Property Card 2 -->
-            <div class="property-card transform hover:-translate-y-2 transition-all duration-300">
-              <div class="overflow-hidden rounded-xl shadow-xl">
-                <div class="h-48 bg-gradient-to-r from-purple-500 to-pink-600 relative">
-                  <div class="absolute inset-0 bg-pattern-overlay opacity-20"></div>
-                  <div class="p-6 h-full flex flex-col justify-between">
-                    <div class="flex justify-between">
-                      <span class="bg-white bg-opacity-30 text-white text-xs px-2 py-1 rounded-full backdrop-blur-sm">LEVEL 3</span>
-                      <span class="bg-purple-600 bg-opacity-90 text-white text-xs px-2 py-1 rounded-full backdrop-blur-sm">PREMIUM</span>
-                    </div>
-                    <div>
-                      <h3 class="text-2xl text-white font-bold text-shadow-sm">Penthouse Suite</h3>
-                      <p class="text-white text-opacity-90 text-sm">Expand your property portfolio</p>
-                    </div>
-                  </div>
-                </div>
-                <div class="p-6 bg-white border border-gray-100 rounded-b-xl">
-                  <div class="flex justify-between items-center">
-                    <div>
-                      <span class="text-sm font-medium text-gray-500">INVESTMENT</span>
-                      <p class="text-xl font-bold text-gray-800">1800 POL</p>
-                    </div>
-                    <div class="text-right">
-                      <span class="text-sm font-medium text-gray-500">RETURN</span>
-                      <p class="text-xl font-bold text-green-600">300%</p>
-                    </div>
-                  </div>
-                  <button class="w-full mt-5 py-3 rounded-lg bg-polygon-purple text-white font-medium hover:bg-polygon-dark transition-all duration-300 shadow-md">
-                    Invest Now
-                  </button>
-                </div>
-              </div>
-            </div>
-            
-            <!-- Property Card 3 -->
-            <div class="property-card transform hover:-translate-y-2 transition-all duration-300">
-              <div class="overflow-hidden rounded-xl shadow-xl">
-                <div class="h-48 bg-gradient-to-r from-green-500 to-teal-600 relative">
-                  <div class="absolute inset-0 bg-pattern-overlay opacity-20"></div>
-                  <div class="p-6 h-full flex flex-col justify-between">
-                    <div class="flex justify-between">
-                      <span class="bg-white bg-opacity-30 text-white text-xs px-2 py-1 rounded-full backdrop-blur-sm">LEVEL 8</span>
-                      <span class="bg-yellow-500 bg-opacity-90 text-white text-xs px-2 py-1 rounded-full backdrop-blur-sm">ELITE</span>
-                    </div>
-                    <div>
-                      <h3 class="text-2xl text-white font-bold text-shadow-sm">Skyline Tower</h3>
-                      <p class="text-white text-opacity-90 text-sm">Ultimate real estate achievement</p>
-                    </div>
-                  </div>
-                </div>
-                <div class="p-6 bg-white border border-gray-100 rounded-b-xl">
-                  <div class="flex justify-between items-center">
-                    <div>
-                      <span class="text-sm font-medium text-gray-500">INVESTMENT</span>
-                      <p class="text-xl font-bold text-gray-800">437,400 POL</p>
-                    </div>
-                    <div class="text-right">
-                      <span class="text-sm font-medium text-gray-500">RETURN</span>
-                      <p class="text-xl font-bold text-green-600">300%</p>
+                      <span class="text-sm font-medium text-gray-500">STRUCTURE</span>
+                      <p class="text-xl font-bold text-green-600">3×8 Matrix</p>
                     </div>
                   </div>
                   <button class="w-full mt-5 py-3 rounded-lg bg-polygon-purple text-white font-medium hover:bg-polygon-dark transition-all duration-300 shadow-md">
@@ -218,7 +150,7 @@ export function loadHomePage(container: HTMLElement): void {
               How <span class="text-polygon-purple">Crypto Real Estate</span> Works
             </h2>
             <p class="mt-4 max-w-2xl mx-auto text-xl text-gray-600">
-              Follow these simple steps to start building your virtual property empire and earning passive income.
+              Follow these simple steps to start building your network and earning passive income.
             </p>
           </div>
 
@@ -257,7 +189,7 @@ export function loadHomePage(container: HTMLElement): void {
                   <div class="ml-6 md:ml-0">
                     <h3 class="text-xl font-bold text-gray-900">Register</h3>
                     <p class="mt-2 text-base text-gray-600">
-                      Register with 200 POL to receive your first virtual property.
+                      Register with 200 POL to secure your position in our 3×8 matrix.
                     </p>
                   </div>
                 </div>
@@ -275,7 +207,7 @@ export function loadHomePage(container: HTMLElement): void {
                   <div class="ml-6 md:ml-0">
                     <h3 class="text-xl font-bold text-gray-900">Invite Others</h3>
                     <p class="mt-2 text-base text-gray-600">
-                      Share your referral link to grow your network of real estate agents.
+                      Share your referral link to grow your network with spillover benefits.
                     </p>
                   </div>
                 </div>
@@ -291,9 +223,9 @@ export function loadHomePage(container: HTMLElement): void {
                   </div>
                   
                   <div class="ml-6 md:ml-0">
-                    <h3 class="text-xl font-bold text-gray-900">Level Up</h3>
+                    <h3 class="text-xl font-bold text-gray-900">Benefit from Spillover</h3>
                     <p class="mt-2 text-base text-gray-600">
-                      Upgrade to higher property levels to maximize your earnings.
+                      Receive new members in your downline through our smart spillover system.
                     </p>
                   </div>
                 </div>
@@ -311,7 +243,7 @@ export function loadHomePage(container: HTMLElement): void {
                   <div class="ml-6 md:ml-0">
                     <h3 class="text-xl font-bold text-gray-900">Collect Earnings</h3>
                     <p class="mt-2 text-base text-gray-600">
-                      Earn passive income through your network and property portfolio.
+                      Earn passive income through your growing network in the 3×8 matrix.
                     </p>
                   </div>
                 </div>
@@ -331,7 +263,7 @@ export function loadHomePage(container: HTMLElement): void {
           <div class="text-center mb-16">
             <span class="px-4 py-1.5 text-sm font-semibold text-polygon-purple bg-gray-800 rounded-full inline-block mb-3">WHY CHOOSE US</span>
             <h2 class="text-3xl md:text-4xl lg:text-5xl font-extrabold text-white tracking-tight">
-              Revolutionary <span class="text-polygon-purple">MLM Platform</span>
+              Revolutionary <span class="text-polygon-purple">3×8 Matrix</span> System
             </h2>
             <p class="mt-4 max-w-2xl mx-auto text-xl text-gray-300">
               Our blockchain-based MLM system offers unique advantages that traditional systems can't match.
@@ -345,12 +277,12 @@ export function loadHomePage(container: HTMLElement): void {
                 <div class="p-8">
                   <div class="w-16 h-16 rounded-xl bg-gradient-to-br from-polygon-light to-polygon-dark flex items-center justify-center mb-6 shadow-lg transform transition-transform duration-300">
                     <svg class="w-8 h-8 text-white" fill="currentColor" viewBox="0 0 20 20">
-                      <path d="M10.707 2.293a1 1 0 00-1.414 0l-7 7a1 1 0 001.414 1.414L4 10.414V17a1 1 0 001 1h2a1 1 0 001-1v-2a1 1 0 011-1h2a1 1 0 011 1v2a1 1 0 001 1h2a1 1 0 001-1v-6.586l.293.293a1 1 0 001.414-1.414l-7-7z"></path>
+                      <path fill-rule="evenodd" d="M3.172 5.172a4 4 0 015.656 0L10 6.343l1.172-1.171a4 4 0 115.656 5.656L10 17.657l-6.828-6.829a4 4 0 010-5.656z" clip-rule="evenodd"></path>
                     </svg>
                   </div>
-                  <h3 class="text-2xl font-bold text-white mb-4">Virtual Property Portfolio</h3>
+                  <h3 class="text-2xl font-bold text-white mb-4">3×8 Matrix Structure</h3>
                   <p class="text-gray-300 leading-relaxed mb-6">
-                    Build your virtual real estate empire with exclusive NFT apartments across 8 different property levels, each with increasing earning potential.
+                    Simple but powerful matrix structure with 3 referrals width and 8 levels depth, allowing you to build a large network efficiently.
                   </p>
                   <div class="h-1 w-12 bg-gradient-to-r from-polygon-light to-polygon-dark"></div>
                 </div>

@@ -202,6 +202,34 @@ export function loadFAQ(container: HTMLElement): void {
                 </ul>
               </div>
             </div>
+            
+            <div class="border-b border-gray-200 pb-4">
+              <button class="flex items-center justify-between w-full text-left font-medium text-gray-900 focus:outline-none" aria-controls="faq-11" data-collapse-toggle="faq-11">
+                <span>What happens if the website goes down?</span>
+                <svg class="w-5 h-5" fill="currentColor" viewBox="0 0 20 20" xmlns="http://www.w3.org/2000/svg">
+                  <path fill-rule="evenodd" d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z" clip-rule="evenodd"></path>
+                </svg>
+              </button>
+              <div id="faq-11" class="hidden mt-2">
+                <p class="text-gray-700">
+                  The website is just an interface to interact with the smart contract. Even if the website goes down, the smart contract will continue to operate on the blockchain. You can still interact with it using other methods like direct contract interaction through Etherscan or by building your own interface.
+                </p>
+              </div>
+            </div>
+            
+            <div class="border-b border-gray-200 pb-4">
+              <button class="flex items-center justify-between w-full text-left font-medium text-gray-900 focus:outline-none" aria-controls="faq-12" data-collapse-toggle="faq-12">
+                <span>Can the contract owner take my funds?</span>
+                <svg class="w-5 h-5" fill="currentColor" viewBox="0 0 20 20" xmlns="http://www.w3.org/2000/svg">
+                  <path fill-rule="evenodd" d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z" clip-rule="evenodd"></path>
+                </svg>
+              </button>
+              <div id="faq-12" class="hidden mt-2">
+                <p class="text-gray-700">
+                  No. The contract is designed so that all payments flow directly between participants. The contract owner cannot access or withdraw funds from participants. The only funds the owner can withdraw are those accidentally sent directly to the contract address.
+                </p>
+              </div>
+            </div>
           </div>
         </div>
         
@@ -211,19 +239,68 @@ export function loadFAQ(container: HTMLElement): void {
           
           <div class="space-y-4">
             <div class="border-b border-gray-200 pb-4">
-              <button class="flex items-center justify-between w-full text-left font-medium text-gray-900 focus:outline-none" aria-controls="faq-11" data-collapse-toggle="faq-11">
+              <button class="flex items-center justify-between w-full text-left font-medium text-gray-900 focus:outline-none" aria-controls="faq-13" data-collapse-toggle="faq-13">
                 <span>Where can I get help if I have problems?</span>
                 <svg class="w-5 h-5" fill="currentColor" viewBox="0 0 20 20" xmlns="http://www.w3.org/2000/svg">
                   <path fill-rule="evenodd" d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z" clip-rule="evenodd"></path>
                 </svg>
               </button>
-              <div id="faq-11" class="hidden mt-2">
+              <div id="faq-13" class="hidden mt-2">
                 <p class="text-gray-700">For technical support with the dApp, please join our community channels:</p>
                 <ul class="list-disc pl-5 mt-2 text-gray-700">
                   <li>Telegram: <a href="#" class="text-polygon-purple hover:underline">BlockchainMLM Community</a></li>
                   <li>Discord: <a href="#" class="text-polygon-purple hover:underline">BlockchainMLM Server</a></li>
                   <li>Email: <a href="mailto:support@example.com" class="text-polygon-purple hover:underline">support@example.com</a></li>
                 </ul>
+              </div>
+            </div>
+            
+            <div class="border-b border-gray-200 pb-4">
+              <button class="flex items-center justify-between w-full text-left font-medium text-gray-900 focus:outline-none" aria-controls="faq-14" data-collapse-toggle="faq-14">
+                <span>What if I send funds to the wrong address?</span>
+                <svg class="w-5 h-5" fill="currentColor" viewBox="0 0 20 20" xmlns="http://www.w3.org/2000/svg">
+                  <path fill-rule="evenodd" d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z" clip-rule="evenodd"></path>
+                </svg>
+              </button>
+              <div id="faq-14" class="hidden mt-2">
+                <p class="text-gray-700">
+                  Unfortunately, blockchain transactions are irreversible. Always double-check addresses before sending any funds. The system is designed to only accept transactions that follow the smart contract rules, so if you send funds directly to an address outside the contract functions, those funds cannot be recovered.
+                </p>
+              </div>
+            </div>
+          </div>
+        </div>
+        
+        <!-- Smart Contract Section -->
+        <div class="p-6 bg-white rounded-lg shadow">
+          <h3 class="text-xl font-bold mb-4 text-polygon-purple">Smart Contract</h3>
+          
+          <div class="space-y-4">
+            <div class="border-b border-gray-200 pb-4">
+              <button class="flex items-center justify-between w-full text-left font-medium text-gray-900 focus:outline-none" aria-controls="faq-15" data-collapse-toggle="faq-15">
+                <span>Can I view the smart contract code?</span>
+                <svg class="w-5 h-5" fill="currentColor" viewBox="0 0 20 20" xmlns="http://www.w3.org/2000/svg">
+                  <path fill-rule="evenodd" d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z" clip-rule="evenodd"></path>
+                </svg>
+              </button>
+              <div id="faq-15" class="hidden mt-2">
+                <p class="text-gray-700">
+                  Yes, the smart contract is open-source and can be viewed on Polygonscan. The contract is verified, meaning anyone can review the code to understand exactly how it works. You can find the contract address in the footer of this website.
+                </p>
+              </div>
+            </div>
+            
+            <div class="border-b border-gray-200 pb-4">
+              <button class="flex items-center justify-between w-full text-left font-medium text-gray-900 focus:outline-none" aria-controls="faq-16" data-collapse-toggle="faq-16">
+                <span>How are transaction fees handled?</span>
+                <svg class="w-5 h-5" fill="currentColor" viewBox="0 0 20 20" xmlns="http://www.w3.org/2000/svg">
+                  <path fill-rule="evenodd" d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z" clip-rule="evenodd"></path>
+                </svg>
+              </button>
+              <div id="faq-16" class="hidden mt-2">
+                <p class="text-gray-700">
+                  Transaction fees (gas) are paid by the person initiating the transaction. These fees go directly to the Polygon network validators, not to any participant or the contract owner. Polygon has very low transaction fees compared to Ethereum, typically costing just a few cents per transaction.
+                </p>
               </div>
             </div>
           </div>

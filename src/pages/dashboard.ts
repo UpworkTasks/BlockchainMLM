@@ -380,9 +380,37 @@ function setupDashboardInteractions(contractInteractor: ContractInteractor, user
   // Buy next level button
   const buyNextLevelBtn = document.getElementById("dash-buy-next-level");
   if (buyNextLevelBtn) {
-    buyNextLevelBtn.addEventListener("click", () => {
-      localStorage.setItem("activePage", "levels");
-      window.dispatchEvent(new Event("navigate"));
+    buyNextLevelBtn.addEventListener("click", async () => {
+      try {
+        // Get user details to determine next level
+        const userDetails = await contractInteractor.getUserDetails(userAddress);
+        if (userDetails) {
+          const nextLevel = userDetails.currentLevel + 1;
+          if (nextLevel <= 8) { // Assuming 8 is the maximum level
+            // Check if the contract interaction method exists before navigating
+            if (contractInteractor.buyLevel) {
+              // Option 1: Direct contract interaction from dashboard
+              const confirm = window.confirm(`Are you sure you want to purchase Level ${nextLevel}?`);
+              if (confirm) {
+                await contractInteractor.buyLevel(nextLevel);
+                // Refresh dashboard after level purchase
+                const container = document.getElementById("dashboard-content")?.parentElement;
+                if (container) {
+                  loadDashboard(container, contractInteractor, userAddress, true);
+                }
+                return;
+              }
+            }
+          }
+        }
+        // If direct interaction not available or user canceled, navigate to levels page
+        localStorage.setItem("activePage", "levels");
+        window.dispatchEvent(new Event("navigate"));
+      } catch (error) {
+        console.error("Error handling level purchase:", error);
+        localStorage.setItem("activePage", "levels");
+        window.dispatchEvent(new Event("navigate"));
+      }
     });
   }
   

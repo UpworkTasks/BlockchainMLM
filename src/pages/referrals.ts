@@ -162,7 +162,10 @@ async function loadReferralData(contractInteractor: ContractInteractor, userAddr
     }
     
     // Update statistics with real data from the contract
-    document.getElementById("total-referrals-count")!.textContent = directReferrals.length.toString();
+    const totalReferralsElement = document.getElementById("total-referrals-count");
+    if (totalReferralsElement) {
+      totalReferralsElement.textContent = directReferrals.length.toString();
+    }
     
     // Calculate total referral earnings from all levels
     let totalReferralEarnings = BigInt(0);
@@ -172,8 +175,11 @@ async function loadReferralData(contractInteractor: ContractInteractor, userAddr
         totalReferralEarnings += earnings.earningsForLevel;
       }
     }
-    document.getElementById("referral-earnings")!.textContent = 
-      `${ethers.formatEther(totalReferralEarnings)} POL`;
+    
+    const referralEarningsElement = document.getElementById("referral-earnings");
+    if (referralEarningsElement) {
+      referralEarningsElement.textContent = `${ethers.formatEther(totalReferralEarnings)} POL`;
+    }
     
     // Calculate active downline count by checking all direct referrals and their referrals
     let activeDownlineCount = 0;
@@ -202,18 +208,33 @@ async function loadReferralData(contractInteractor: ContractInteractor, userAddr
       }
     }
     
-    document.getElementById("active-downline")!.textContent = activeDownlineCount.toString();
+    const activeDownlineElement = document.getElementById("active-downline");
+    if (activeDownlineElement) {
+      activeDownlineElement.textContent = activeDownlineCount.toString();
+    }
     
     // Calculate overflow received by checking payment events
-    const userEvents = await contractInteractor.getUserEvents(userAddress);
-    const overflowCount = userEvents.filter(event => 
-      event.type === 'payment' && 
-      !directReferrals.some(ref => 
-        ref.toLowerCase() === event.args?.[1].toLowerCase()
-      )
-    ).length;
-    
-    document.getElementById("overflow-received")!.textContent = overflowCount.toString();
+    // This might require additional methods in contractInteractor
+    try {
+      const userEvents = await contractInteractor.getUserEvents(userAddress);
+      const overflowCount = userEvents.filter(event => 
+        event.type === 'payment' && 
+        !directReferrals.some(ref => 
+          ref.toLowerCase() === event.args?.[1].toLowerCase()
+        )
+      ).length;
+      
+      const overflowReceivedElement = document.getElementById("overflow-received");
+      if (overflowReceivedElement) {
+        overflowReceivedElement.textContent = overflowCount.toString();
+      }
+    } catch (eventError) {
+      console.error("Error loading events:", eventError);
+      const overflowReceivedElement = document.getElementById("overflow-received");
+      if (overflowReceivedElement) {
+        overflowReceivedElement.textContent = "N/A";
+      }
+    }
     
   } catch (error) {
     console.error("Error loading referral data:", error);
@@ -225,20 +246,69 @@ function setupReferralActions(contractInteractor: ContractInteractor, userAddres
   if (copyReferralBtn) {
     copyReferralBtn.addEventListener("click", () => {
       const referralLink = document.getElementById("referral-link-input") as HTMLInputElement;
-      referralLink.select();
-      document.execCommand("copy");
       
-      // Show copied feedback
-      copyReferralBtn.textContent = "Copied!";
-      setTimeout(() => {
-        copyReferralBtn.innerHTML = `
-          <svg class="w-4 h-4 mr-1" fill="currentColor" viewBox="0 0 20 20" xmlns="http://www.w3.org/2000/svg">
-            <path d="M8 3a1 1 0 011-1h2a1 1 0 110 2H9a1 1 0 01-1-1z"></path>
-            <path d="M6 3a2 2 0 00-2 2v11a2 2 0 002 2h8a2 2 0 002-2V5a2 2 0 00-2-2 3 3 0 01-3 3H9a3 3 0 01-3-3z"></path>
-          </svg>
-          Copy
-        `;
-      }, 2000);
+      // Copy to clipboard using the function
+      copyToClipboard(
+        referralLink.value, 
+        copyReferralBtn, 
+        `<svg class="w-4 h-4 mr-1" fill="currentColor" viewBox="0 0 20 20" xmlns="http://www.w3.org/2000/svg">
+          <path d="M8 3a1 1 0 011-1h2a1 1 0 110 2H9a1 1 0 01-1-1z"></path>
+          <path d="M6 3a2 2 0 00-2 2v11a2 2 0 002 2h8a2 2 0 002-2V5a2 2 0 00-2-2 3 3 0 01-3 3H9a3 3 0 01-3-3z"></path>
+        </svg>
+        Copy`,
+        "Copied!"
+      );
     });
   }
+  
+  // Add a refresh button to the page if it doesn't exist yet
+  const referralsContent = document.getElementById("referrals-content");
+  if (referralsContent) {
+    let refreshBtn = document.getElementById("refresh-referrals");
+    if (!refreshBtn) {
+      refreshBtn = document.createElement("button");
+      refreshBtn.id = "refresh-referrals";
+      refreshBtn.className = "px-4 py-2 mt-4 bg-gray-100 hover:bg-gray-200 text-gray-800 rounded-lg flex items-center justify-center focus:outline-none focus:ring-2 focus:ring-gray-300";
+      refreshBtn.innerHTML = `
+        <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"></path>
+        </svg>
+        Refresh Referrals
+      `;
+      referralsContent.appendChild(refreshBtn);
+    }
+    
+    refreshBtn.addEventListener("click", async () => {
+      const container = document.getElementById("referrals-content")?.parentElement;
+      if (container) {
+        await loadReferralsPage(container, contractInteractor, userAddress, true);
+      }
+    });
+  }
+}
+
+// Helper function to copy text to clipboard
+function copyToClipboard(text: string, button: HTMLElement, originalContent: string, successText: string = "Copied!"): void {
+  try {
+    navigator.clipboard.writeText(text);
+    
+    // Show success message
+    button.textContent = successText;
+    
+    // Reset button after 2 seconds
+    setTimeout(() => {
+      button.innerHTML = originalContent;
+    }, 2000);
+  } catch (err) {
+    console.error("Faild to copy:", err);
+    alert("Failed to copy to clipboard");
+  }
+}
+
+// Add support for handling getUserEvents if it doesn't exist in the ContractInteractor
+// This is a fallback implementation in case it's not defined
+if (typeof ContractInteractor.prototype.getUserEvents === 'undefined') {
+  // This would typically be added to the ContractInteractor class directly,
+  // but since we can't modify it here, we'll add a note about implementing it
+  console.warn("ContractInteractor.getUserEvents() is not implemented. Overflow calculations will not work correctly.");
 }

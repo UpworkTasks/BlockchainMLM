@@ -135,14 +135,14 @@ async function loadLevelData(contractInteractor: ContractInteractor, userAddress
     if (currentLevelEl) {
       currentLevelEl.textContent = userDetails.currentLevel.toString();
     }
-    
+
     // Update next level display
     const nextLevel = userDetails.currentLevel < 8 ? userDetails.currentLevel + 1 : "Max";
     const nextLevelEl = document.getElementById("next-level-display");
     if (nextLevelEl) {
       nextLevelEl.textContent = nextLevel.toString();
     }
-    
+
     // Update upgrade cost display
     const upgradeCostEl = document.getElementById("upgrade-cost-display");
     if (upgradeCostEl) {
@@ -153,7 +153,7 @@ async function loadLevelData(contractInteractor: ContractInteractor, userAddress
         upgradeCostEl.textContent = "N/A";
       }
     }
-    
+
     // Enable/disable buy button
     const buyButton = document.getElementById("buy-next-level") as HTMLButtonElement;
     if (buyButton) {
@@ -164,39 +164,39 @@ async function loadLevelData(contractInteractor: ContractInteractor, userAddress
         buyButton.textContent = "Maximum Level Reached";
       }
     }
-    
+
     // Populate levels table
     const tableBody = document.getElementById("levels-table-body");
     if (tableBody) {
       tableBody.innerHTML = "";
-      
+
       // Level price multipliers (relative to referrals)
       const referralMultipliers = [3, 9, 27, 81, 243, 729, 2187, 6561];
-      
+
       for (let level = 1; level <= 8; level++) {
         const isActive = await contractInteractor.isLevelActive(userAddress, level);
         const levelPrice = await contractInteractor.getLevelPrice(level);
         const formattedPrice = ethers.formatEther(levelPrice);
-        
+
         const potentialEarnings = level === 8 ? "N/A" : ethers.formatEther(levelPrice * BigInt(referralMultipliers[level - 1]));
-        
+
         const row = document.createElement("tr");
         row.className = isActive ? "bg-green-50" : level === userDetails.currentLevel + 1 ? "bg-yellow-50" : "bg-white";
-        
+
         row.innerHTML = `
           <td class="px-6 py-4 font-medium ${isActive ? 'text-green-800' : 'text-gray-900'}">${level}</td>
           <td class="px-6 py-4">${formattedPrice} POL</td>
           <td class="px-6 py-4">${potentialEarnings} POL</td>
           <td class="px-6 py-4">
-            ${isActive 
-              ? '<span class="bg-green-100 text-green-800 text-xs font-medium me-2 px-2.5 py-0.5 rounded">Active</span>' 
-              : level === userDetails.currentLevel + 1
-                ? '<span class="bg-yellow-100 text-yellow-800 text-xs font-medium me-2 px-2.5 py-0.5 rounded">Available</span>'
-                : '<span class="bg-gray-100 text-gray-800 text-xs font-medium me-2 px-2.5 py-0.5 rounded">Locked</span>'
-            }
+            ${isActive
+            ? '<span class="bg-green-100 text-green-800 text-xs font-medium me-2 px-2.5 py-0.5 rounded">Active</span>'
+            : level === userDetails.currentLevel + 1
+              ? '<span class="bg-yellow-100 text-yellow-800 text-xs font-medium me-2 px-2.5 py-0.5 rounded">Available</span>'
+              : '<span class="bg-gray-100 text-gray-800 text-xs font-medium me-2 px-2.5 py-0.5 rounded">Locked</span>'
+          }
           </td>
         `;
-        
+
         tableBody.appendChild(row);
       }
     }
@@ -210,29 +210,29 @@ function setupLevelInteractions(contractInteractor: ContractInteractor, userAddr
   if (buyNextLevelBtn) {
     buyNextLevelBtn.addEventListener("click", async () => {
       if (!userAddress) return;
-      
+
       try {
         // Get user details to determine next level
         const userDetails = await contractInteractor.getUserDetails(userAddress);
         if (!userDetails) return;
-        
+
         const nextLevel = userDetails.currentLevel + 1;
         if (nextLevel > 8) {
           alert("You've already reached the maximum level!");
           return;
         }
-        
+
         // Confirm purchase
         if (!confirm(`Are you sure you want to purchase Level ${nextLevel} for ${ethers.formatEther(await contractInteractor.getLevelPrice(nextLevel))} POL?`)) {
           return;
         }
-        
+
         buyNextLevelBtn.setAttribute("disabled", "true");
         buyNextLevelBtn.textContent = "Processing...";
-        
+
         // Buy the level
         const success = await contractInteractor.buyLevel(nextLevel);
-        
+
         if (success) {
           alert(`Successfully purchased Level ${nextLevel}!`);
           loadLevelsPage(document.querySelector("#main-content main") as HTMLElement, contractInteractor, userAddress, true);

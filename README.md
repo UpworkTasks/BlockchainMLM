@@ -53,6 +53,112 @@ After filling 3 direct referral slots, any additional referrals overflow to your
 - Level 7: After paying 145,800 POL, receive 200 POL from 2,187 referrals (437,400 POL)
 - Level 8: After paying 437,400 POL, receive 200 POL from 6,561 referrals (1,312,200 POL)
 
+## Detailed Contract Functionality
+
+### User Registration (`register` function)
+
+1. **User Calls Register**:
+
+   - User sends 200 POL with their registration transaction
+   - They can specify a referrer (upline) address or let the system assign one
+
+2. **Upline Assignment**:
+
+   - If the specified upline is invalid or none is provided, the system finds an appropriate upline using `findSystemUpline()`
+   - The system prioritizes users with fewer referrals to ensure balanced distribution
+
+3. **User Structure Creation**:
+
+   - A new User structure is created for the registered address
+   - `registered = true`
+   - `upline = assigned_upline_address`
+   - `currentLevel = 1`
+   - `activeLevel[1] = true`
+   - `timestamp = current_block_timestamp`
+
+4. **Payment Processing**:
+
+   - The 200 POL registration fee is transferred directly to the upline
+   - The upline's earnings are updated:
+     - `totalEarnings += 200 POL`
+     - `levelEarnings[1].totalEarned += 200 POL`
+     - `levelEarnings[1].referralCount++`
+
+5. **Referral Placement**:
+   - User is added to their upline's `directReferrals` array if there's space (less than 3 referrals)
+   - If the upline already has 3 referrals, the overflow mechanism places the new user under one of the upline's referrals
+
+### Level Purchase (`buyLevel` function)
+
+1. **User Calls BuyLevel**:
+
+   - User must already be registered
+   - Can only buy the next sequential level (e.g., if at Level 2, can only buy Level 3)
+   - Must send the exact payment amount for the level
+
+2. **Finding Appropriate Upline**:
+
+   - The system finds an upline who already has the level being purchased using `findUplineForLevel()`
+   - This might not be the user's direct upline, but someone further up in their lineage
+   - If no appropriate upline is found, the payment goes to the contract owner
+
+3. **Payment Processing**:
+
+   - The level cost is transferred directly to the identified upline
+   - The upline's earnings are updated:
+     - `totalEarnings += level_price`
+     - `levelEarnings[level].totalEarned += level_price`
+     - `levelEarnings[level].referralCount++`
+
+4. **User Level Update**:
+   - `currentLevel = purchased_level`
+   - `activeLevel[purchased_level] = true`
+
+### Overflow Mechanism (In `register` function)
+
+1. **Overflow Trigger**:
+   - When a user's direct upline already has 3 referrals
+2. **Placement Algorithm**:
+
+   - Searches through upline's referrals for someone with less than 3 referrals
+   - Uses a breadth-first search approach through the network
+   - If no suitable spot is found after searching the entire network, places user under the owner
+
+3. **Benefits**:
+   - Ensures balanced network growth
+   - Guarantees placement for every new user
+   - Creates automatic "spillover" benefits for active participants
+
+### Earnings Distribution Logic
+
+1. **Direct Payment Model**:
+
+   - All payments are made directly between users (peer-to-peer)
+   - The contract does not hold funds except during the transaction processing
+
+2. **Level-specific Earnings**:
+
+   - Users only receive payments for levels they have activated
+   - If a user hasn't purchased Level X, they can't receive Level X payments from their downline
+   - These payments "skip" to the next eligible upline
+
+3. **Tracking Mechanism**:
+   - All earnings are tracked by the contract
+   - Each user has detailed records of earnings per level and referral counts
+
+### Smart Contract Owner Functions
+
+1. **Emergency Withdraw**:
+
+   - The owner can withdraw any POL accidentally sent to the contract
+
+2. **Transfer Ownership**:
+
+   - The owner can transfer contract ownership to another address
+
+3. **Default Upline**:
+   - The owner serves as the default upline for users who don't specify one or when the system can't find a suitable upline
+
 ## Smart Contract Details
 
 The MLM system is implemented as a Polygon smart contract with the following level pricing:
@@ -76,6 +182,32 @@ The MLM system is implemented as a Polygon smart contract with the following lev
 - Inactive referrals multiply your profit
 - All transactions are direct between participants
 - Annual recurring profit potential
+
+## Technical Implementation Notes
+
+1. **User Data Storage**:
+
+   - All user data is stored on the blockchain
+   - Uses mappings and structs for efficient data access
+   - Maintains an array of all registered users for system-wide operations
+
+2. **Events**:
+
+   - `Registration`: Emitted when a new user registers
+   - `LevelPurchased`: Emitted when a user buys a new level
+   - `ReferralAdded`: Emitted when a user is added as someone's referral
+   - `PaymentReceived`: Emitted when a user receives a payment
+
+3. **Security Measures**:
+
+   - Function modifiers ensure only eligible users can perform certain actions
+   - Input validation prevents incorrect payment amounts
+   - Sequential level purchases prevent skipping levels
+
+4. **Deterministic Algorithms**:
+   - All placement and payment algorithms are deterministic
+   - No random elements ensure predictability and fairness
+   - Network growth follows mathematical progression (3^n at each level)
 
 ## Getting Started
 
