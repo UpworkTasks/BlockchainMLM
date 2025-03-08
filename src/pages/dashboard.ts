@@ -149,6 +149,15 @@ async function loadUserData(contractInteractor: ContractInteractor, userAddress:
     const userDetails = await contractInteractor.getUserDetails(userAddress);
     if (!userDetails) return;
     
+    // Check if user is owner
+    let isOwner = false;
+    try {
+      const ownerAddress = await contractInteractor.getOwner();
+      isOwner = userAddress.toLowerCase() === ownerAddress.toLowerCase();
+    } catch (error) {
+      console.error("Error checking owner status:", error);
+    }
+    
     // Update current level
     const currentLevelEl = document.getElementById("current-level");
     if (currentLevelEl) {
@@ -174,18 +183,29 @@ async function loadUserData(contractInteractor: ContractInteractor, userAddress:
       memberSinceEl.textContent = date.toLocaleDateString();
     }
     
+    // Add owner badge if user is owner
+    const statsContainer = document.getElementById("stats-container");
+    if (statsContainer && isOwner) {
+      // Add owner badge to stats container
+      const ownerBadge = document.createElement("div");
+      ownerBadge.className = "p-4 bg-red-50 rounded-lg border border-red-100";
+      ownerBadge.innerHTML = `
+        <div class="text-red-800 text-xl font-bold">Contract Owner</div>
+        <div class="text-sm text-gray-600">You have admin privileges</div>
+      `;
+      statsContainer.appendChild(ownerBadge);
+    }
+    
     // Update levels summary
     const levelsSummaryEl = document.getElementById("levels-summary");
     if (levelsSummaryEl) {
       levelsSummaryEl.innerHTML = "";
-      
       for (let level = 1; level <= 8; level++) {
         const isActive = await contractInteractor.isLevelActive(userAddress, level);
         const levelEarnings = await contractInteractor.getUserLevelEarnings(userAddress, level);
         
         const row = document.createElement("tr");
         row.className = isActive ? "bg-green-50" : "bg-white";
-        
         row.innerHTML = `
           <td class="px-6 py-4 font-medium ${isActive ? 'text-green-800' : 'text-gray-900'}">Level ${level}</td>
           <td class="px-6 py-4">
@@ -199,23 +219,19 @@ async function loadUserData(contractInteractor: ContractInteractor, userAddress:
           <td class="px-6 py-4">${levelEarnings ? ethers.formatEther(levelEarnings.earningsForLevel) : '0'} POL</td>
           <td class="px-6 py-4">${levelEarnings ? levelEarnings.referralCountForLevel : '0'}</td>
         `;
-        
         levelsSummaryEl.appendChild(row);
       }
-    }
+    }   
     
     // Get real activity from blockchain events
     const latestActivityEl = document.getElementById("latest-activity");
     if (latestActivityEl) {
       latestActivityEl.innerHTML = `<div class="p-3 bg-gray-50 rounded-lg text-sm"><div class="text-gray-700">Loading activity...</div></div>`;
-      
       try {
         // Get user's referrals
         const directReferrals = await contractInteractor.getDirectReferrals(userAddress);
-        
         // Get level earnings for real earnings data
         const activities = [];
-        
         // Add referral activities
         if (directReferrals && directReferrals.length > 0) {
           for (let i = 0; i < Math.min(directReferrals.length, 3); i++) {
@@ -231,14 +247,12 @@ async function loadUserData(contractInteractor: ContractInteractor, userAddress:
             }
           }
         }
-        
         // Add level purchase activities based on current level
         if (userDetails.currentLevel > 1) {
           for (let level = 2; level <= userDetails.currentLevel; level++) {
             // We don't have the exact time of level purchase, so we estimate
             const estimatedTime = new Date();
             estimatedTime.setDate(estimatedTime.getDate() - (level * 2)); // Mock time - newer levels are more recent
-            
             activities.push({
               type: "level_purchase",
               level: level,
@@ -246,7 +260,6 @@ async function loadUserData(contractInteractor: ContractInteractor, userAddress:
             });
           }
         }
-        
         // Add earnings activities - get real earnings data
         for (let level = 1; level <= userDetails.currentLevel; level++) {
           const levelEarnings = await contractInteractor.getUserLevelEarnings(userAddress, level);
@@ -259,18 +272,14 @@ async function loadUserData(contractInteractor: ContractInteractor, userAddress:
             });
           }
         }
-        
         // Sort by assumed recency (this could be improved with real timestamps)
         // activities.sort((a, b) => new Date(b.time).getTime() - new Date(a.time).getTime());
-        
         // If we got activities, display them
         if (activities.length > 0) {
           latestActivityEl.innerHTML = "";
-          
           activities.slice(0, 5).forEach(activity => {
             const activityEl = document.createElement("div");
             activityEl.className = "p-3 bg-gray-50 rounded-lg text-sm mb-2";
-            
             switch (activity.type) {
               case "registration":
                 activityEl.innerHTML = `
@@ -291,7 +300,6 @@ async function loadUserData(contractInteractor: ContractInteractor, userAddress:
                 `;
                 break;
             }
-            
             latestActivityEl.appendChild(activityEl);
           });
         } else {
@@ -308,8 +316,8 @@ async function loadUserData(contractInteractor: ContractInteractor, userAddress:
             <div class="text-gray-700">Could not load activity data. Please try again later.</div>
           </div>
         `;
-      }
-    }
+      }     
+    }   
   } catch (error) {
     console.error("Error loading user data:", error);
   }
@@ -318,34 +326,28 @@ async function loadUserData(contractInteractor: ContractInteractor, userAddress:
 // Helper function to get time since a date in human-readable format
 function getTimeSince(date: Date): string {
   const seconds = Math.floor((new Date().getTime() - date.getTime()) / 1000);
-  
   let interval = Math.floor(seconds / 31536000);
   if (interval >= 1) {
     return interval + (interval === 1 ? " year" : " years") + " ago";
   }
-  
   interval = Math.floor(seconds / 2592000);
   if (interval >= 1) {
     return interval + (interval === 1 ? " month" : " months") + " ago";
   }
-  
   interval = Math.floor(seconds / 86400);
   if (interval >= 1) {
     return interval + (interval === 1 ? " day" : " days") + " ago";
   }
-  
   interval = Math.floor(seconds / 3600);
   if (interval >= 1) {
     return interval + (interval === 1 ? " hour" : " hours") + " ago";
   }
-  
   interval = Math.floor(seconds / 60);
   if (interval >= 1) {
     return interval + (interval === 1 ? " minute" : " minutes") + " ago";
   }
-  
   return Math.floor(seconds) + " seconds ago";
-}
+} 
 
 function setupDashboardInteractions(contractInteractor: ContractInteractor, userAddress: string) {
   // Copy referral link button
@@ -422,4 +424,35 @@ function setupDashboardInteractions(contractInteractor: ContractInteractor, user
       window.dispatchEvent(new Event("navigate"));
     });
   }
+  
+  // Add admin button for owner
+  async function addAdminButton() {
+    try {
+      const ownerAddress = await contractInteractor.getOwner();
+      if (userAddress.toLowerCase() === ownerAddress.toLowerCase()) {
+        const quickActionsContainer = document.querySelector(".space-y-2");
+        if (quickActionsContainer) {
+          const adminButton = document.createElement("button");
+          adminButton.id = "go-to-admin";
+          adminButton.className = "w-full px-4 py-2 bg-red-600 hover:bg-red-700 text-white rounded-lg flex items-center justify-center focus:outline-none focus:ring-2 focus:ring-red-500";
+          adminButton.innerHTML = `
+            <svg class="w-5 h-5 mr-2" fill="currentColor" viewBox="0 0 20 20" xmlns="http://www.w3.org/2000/svg">
+              <path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-6-3a2 2 0 11-4 0 2 2 0 014 0zm-2 4a5 5 0 00-4.546 2.916A5.986 5.986 0 005 10a6 6 0 0012 0c0-1.146-.32-2.217-.868-3.284A5 5 0 0010 7z" clip-rule="evenodd"></path>
+            </svg>
+            Admin Dashboard
+          `;
+          adminButton.addEventListener("click", () => {
+            localStorage.setItem("activePage", "admin");
+            window.dispatchEvent(new Event("navigate"));
+          });
+          quickActionsContainer.appendChild(adminButton);
+        }
+      }
+    } catch (error) {
+      console.error("Error setting up admin button:", error);
+    }
+  }
+  
+  // Call the function to add admin button
+  addAdminButton();
 }

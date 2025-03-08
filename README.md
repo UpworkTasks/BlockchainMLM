@@ -53,6 +53,40 @@ After filling 3 direct referral slots, any additional referrals overflow to your
 - Level 7: After paying 145,800 POL, receive 200 POL from 2,187 referrals (437,400 POL)
 - Level 8: After paying 437,400 POL, receive 200 POL from 6,561 referrals (1,312,200 POL)
 
+### Owner's Earnings in the System
+
+The contract owner has several privileged ways to earn in the MLM system:
+
+1. **Default Upline Position**:
+
+   - When users register without a valid referrer, the owner becomes their upline
+   - The owner receives the 200 POL registration fee from these users
+   - This is especially beneficial in the early stages when the network is small
+
+2. **Overflow Mechanism Beneficiary**:
+
+   - When the referral overflow algorithm can't find suitable placement in the network
+   - New users get placed under the owner as a last resort
+   - The owner receives direct referrals without recruitment effort
+
+3. **Higher Level Fallback**:
+
+   - When users purchase higher levels and no upline with that level is found
+   - Payments go to the owner as fallback recipient
+   - This happens when a user's lineage doesn't have higher level participants
+
+4. **No Registration Fee**:
+
+   - The owner doesn't need to pay the 200 POL registration fee
+   - The owner is automatically placed at the top of the pyramid structure
+   - This gives the owner an immediate advantage in the system
+
+5. **Emergency Funds Access**:
+   - The owner can withdraw any POL accidentally sent directly to the contract
+   - This is intended for emergency situations and contract maintenance
+
+These mechanisms ensure the owner has multiple revenue streams within the system, particularly in the early growth stages of the network.
+
 ## Detailed Contract Functionality
 
 ### User Registration (`register` function)

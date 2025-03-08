@@ -46,7 +46,8 @@ const networkConfigs: Record<string, NetworkConfig> = {
 };
 
 export class ContractInteractor {
-  private provider: ethers.BrowserProvider | null = null;
+  // Make provider public so it can be accessed by admin.ts
+  public provider: ethers.BrowserProvider | null = null;
   private signer: ethers.JsonRpcSigner | null = null;
   private contract: ethers.Contract | null = null;
   private selectedNetwork: string = 'hardhat';
@@ -423,6 +424,163 @@ export class ContractInteractor {
     } catch (error) {
       console.error('Error getting user events:', error);
       return [];
+    }
+  }
+
+  // Add missing methods needed by admin.ts
+  async getOwner(): Promise<string> {
+    try {
+      if (!this.contract) {
+        console.error('Contract not initialized');
+        return ethers.ZeroAddress;
+      }
+
+      return await this.contract.getOwner();
+    } catch (error) {
+      console.error('Error getting owner:', error);
+      return ethers.ZeroAddress;
+    }
+  }
+
+  async getContractBalance(): Promise<bigint> {
+    try {
+      if (!this.provider) {
+        console.error('Provider not initialized');
+        return BigInt(0);
+      }
+
+      const network = this.getCurrentNetwork();
+      return await this.provider.getBalance(network.contractAddress);
+    } catch (error) {
+      console.error('Error getting contract balance:', error);
+      return BigInt(0);
+    }
+  }
+
+  async getTransactionCount(): Promise<number> {
+    try {
+      if (!this.provider) {
+        console.error('Provider not initialized');
+        return 0;
+      }
+
+      const network = this.getCurrentNetwork();
+      const count = await this.provider.getTransactionCount(network.contractAddress);
+      return Number(count);
+    } catch (error) {
+      console.error('Error getting transaction count:', error);
+      return 0;
+    }
+  }
+
+  async getRegistrationEvents(limit: number = 10): Promise<any[]> {
+    try {
+      if (!this.contract || !this.provider) {
+        console.error('Contract or provider not initialized');
+        return [];
+      }
+
+      const currentBlock = await this.provider.getBlockNumber();
+      const fromBlock = Math.max(0, currentBlock - 10000); // Look back 10000 blocks
+
+      const registrationFilter = this.contract.filters.Registration();
+      const events = await this.contract.queryFilter(registrationFilter, fromBlock);
+      
+      return events
+        .sort((a, b) => b.blockNumber - a.blockNumber) // Sort newest first
+        .slice(0, limit);
+    } catch (error) {
+      console.error('Error getting registration events:', error);
+      return [];
+    }
+  }
+
+  async getRegistrationsByDate(): Promise<{dates: string[], counts: number[]}> {
+    try {
+      if (!this.contract || !this.provider) {
+        console.error('Contract or provider not initialized');
+        return { dates: [], counts: [] };
+      }
+
+      const currentBlock = await this.provider.getBlockNumber();
+      const fromBlock = Math.max(0, currentBlock - 100000); // Look back further for chart data
+
+      const registrationFilter = this.contract.filters.Registration();
+      const events = await this.contract.queryFilter(registrationFilter, fromBlock);
+      
+      // Group by date
+      const dateGroups = new Map<string, number>();
+      
+      for (const event of events) {
+        if (!('args' in event) || !event.args) continue;
+        
+        try {
+          const timestamp = Number(event.args[2]) * 1000; // Convert to milliseconds
+          const date = new Date(timestamp).toLocaleDateString();
+          
+          dateGroups.set(date, (dateGroups.get(date) || 0) + 1);
+        } catch (error) {
+          console.error('Error processing registration event:', error);
+        }
+      }
+      
+      // Sort dates chronologically
+      const sortedDates = Array.from(dateGroups.keys()).sort(
+        (a, b) => new Date(a).getTime() - new Date(b).getTime()
+      );
+      
+      // Get counts in the same order as sorted dates
+      const counts = sortedDates.map(date => dateGroups.get(date) || 0);
+      
+      return { dates: sortedDates, counts };
+    } catch (error) {
+      console.error('Error processing registration data by date:', error);
+      return { dates: [], counts: [] };
+    }
+  }
+
+  async transferOwnership(newOwnerAddress: string): Promise<boolean> {
+    try {
+      if (!this.contract) {
+        console.error('Contract not initialized');
+        return false;
+      }
+
+      const tx = await this.contract.transferOwnership(newOwnerAddress);
+      await tx.wait();
+      return true;
+    } catch (error) {
+      console.error('Error transferring ownership:', error);
+      return false;
+    }
+  }
+
+  async emergencyWithdraw(): Promise<boolean> {
+    try {
+      if (!this.contract) {
+        console.error('Contract not initialized');
+        return false;
+      }
+
+      const tx = await this.contract.withdraw();
+      await tx.wait();
+      return true;
+    } catch (error) {
+      console.error('Error withdrawing funds:', error);
+      return false;
+    }
+  }
+
+  async getCurrentWalletAddress(): Promise<string | null> {
+    try {
+      if (!this.signer) {
+        return null;
+      }
+      
+      return await this.signer.getAddress();
+    } catch (error) {
+      console.error('Error getting current wallet address:', error);
+      return null;
     }
   }
 }

@@ -8,6 +8,7 @@ import { loadReferralsPage } from "./pages/referrals";
 import { loadEarningsPage } from "./pages/earnings";
 import { loadHowItWorks } from "./pages/how-it-works";
 import { loadFAQ } from "./pages/faq";
+import { loadAdminPage } from "./pages/admin"; // Import admin page
 import { showLoadingOverlay, hideLoadingOverlay } from "./components/loading-overlay";
 // Import debug helpers
 import "./debug-helpers";
@@ -53,6 +54,10 @@ async function init() {
   
   setupEventListeners();
   checkWalletConnection();
+  
+  // Update navigation links for owner status
+  await updateNavLinks();
+  
   loadActivePage();
   
   // Check if URL has a referral, but store minimal data to avoid quota issues
@@ -139,6 +144,7 @@ async function connectWallet() {
 async function checkWalletConnection() {
   if (window.ethereum && window.ethereum.selectedAddress) {
     await connectWallet();
+    await updateNavLinks(); // Update navigation links after wallet connection
   } else {
     walletConnectBtn.classList.remove("hidden");
     walletConnectedContainer.classList.add("hidden");
@@ -356,9 +362,112 @@ async function loadActivePage() {
       case "faq":
         loadFAQ(mainContent);
         break;
+      case "admin":
+        // Only load admin page if user is the contract owner
+        if (currentUserAddress) {
+          try {
+            const ownerAddress = await contractInteractor.getOwner();
+            if (currentUserAddress.toLowerCase() === ownerAddress.toLowerCase()) {
+              await loadAdminPage(mainContent, contractInteractor, currentUserAddress);
+            } else {
+              // If not owner, redirect to dashboard
+              loadDashboard(mainContent, contractInteractor, currentUserAddress, isRegistered);
+              localStorage.setItem("activePage", "dashboard");
+              // Update active nav class
+              sidebarLinks.forEach(link => {
+                if (link.getAttribute("data-page") === "dashboard") {
+                  link.classList.add("active-nav", "bg-gray-100");
+                } else {
+                  link.classList.remove("active-nav", "bg-gray-100");
+                }
+              });
+            }
+          } catch (error) {
+            console.error("Error checking owner status:", error);
+            loadDashboard(mainContent, contractInteractor, currentUserAddress, isRegistered);
+          }
+        } else {
+          // If not connected, load home page
+          loadHomePage(mainContent);
+        }
+        break;
       default:
         loadHomePage(mainContent);
     }
+  }
+  
+  // Update the navigation links for owner status
+  await updateNavLinks();
+}
+
+// Update navigation links
+async function updateNavLinks() {
+  // Get all sidebar links
+  const sidebarLinks = document.querySelectorAll("[data-page]");
+  
+  // Check if current user is the contract owner
+  let isOwner = false;
+  if (currentUserAddress) {
+    try {
+      const ownerAddress = await contractInteractor.getOwner();
+      isOwner = currentUserAddress.toLowerCase() === ownerAddress.toLowerCase();
+    } catch (error) {
+      console.error("Error checking owner status:", error);
+    }
+  }
+  
+  // Get the navigation list container
+  const navList = document.querySelector("#sidebar ul");
+  
+  // Add admin link if user is owner and it doesn't exist yet
+  if (isOwner && navList && !document.querySelector('[data-page="admin"]')) {
+    const adminLi = document.createElement("li");
+    adminLi.innerHTML = `
+      <a href="#" data-page="admin" class="flex items-center p-2 text-gray-900 rounded-lg hover:bg-gray-100">
+        <svg class="w-5 h-5 text-gray-500" fill="currentColor" viewBox="0 0 20 20" xmlns="http://www.w3.org/2000/svg">
+          <path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-6-3a2 2 0 11-4 0 2 2 0 014 0zm-2 4a5 5 0 00-4.546 2.916A5.986 5.986 0 005 10a6 6 0 0012 0c0-1.146-.32-2.217-.868-3.284A5 5 0 0010 7z" clip-rule="evenodd"></path>
+        </svg>
+        <span class="ml-3">Admin</span>
+      </a>
+    `;
+    navList.appendChild(adminLi);
+    
+    // Add event listener to new admin link
+    const adminLink = adminLi.querySelector('a');
+    if (adminLink) {
+      adminLink.addEventListener("click", (e) => {
+        e.preventDefault();
+        navigateToPage("admin");
+      });
+    }
+  }
+}
+
+// Update the dashboard to add an admin link for the owner
+async function loadUserData(contractInteractor: ContractInteractor, userAddress: string) {
+  try {
+    // ...existing code...
+    
+    // Check if user is owner
+    const ownerAddress = await contractInteractor.getOwner();
+    const isOwner = userAddress.toLowerCase() === ownerAddress.toLowerCase();
+    
+    // Update dashboard with owner badge if applicable
+    const statsContainer = document.getElementById("stats-container");
+    if (statsContainer && isOwner) {
+      // Add owner badge to stats container
+      const ownerBadge = document.createElement("div");
+      ownerBadge.className = "p-4 bg-red-50 rounded-lg border border-red-100";
+      ownerBadge.innerHTML = `
+        <div class="text-red-800 text-xl font-bold">Contract Owner</div>
+        <div class="text-sm text-gray-600">You have admin privileges</div>
+      `;
+      statsContainer.appendChild(ownerBadge);
+    }
+    
+    // ...existing code...
+  } catch (error) {
+    console.error("Error loading user data:", error);
   }
 }
 
