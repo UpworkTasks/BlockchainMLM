@@ -248,9 +248,8 @@ export function loadFAQ(container: HTMLElement): void {
               <div id="faq-13" class="hidden mt-2">
                 <p class="text-gray-700">For technical support with the dApp, please join our community channels:</p>
                 <ul class="list-disc pl-5 mt-2 text-gray-700">
-                  <li>Telegram: <a href="#" class="text-polygon-purple hover:underline">BlockchainMLM Community</a></li>
-                  <li>Discord: <a href="#" class="text-polygon-purple hover:underline">BlockchainMLM Server</a></li>
-                  <li>Email: <a href="mailto:support@example.com" class="text-polygon-purple hover:underline">support@example.com</a></li>
+                  <li>Telegram: <a href="https://t.me/+5aATGQKT0NE0ZDJk" class="text-polygon-purple hover:underline">Crypto Realors</a></li>
+                  
                 </ul>
               </div>
             </div>

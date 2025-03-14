@@ -1,10 +1,13 @@
 export function loadHomePage(container: HTMLElement): void {
   container.innerHTML = `
     <div class="home-container overflow-hidden">
-      <!-- Hero Section with 3D Animation -->
+      <!-- Hero Section with Background Image -->
       <section class="relative min-h-screen overflow-hidden">
-        <!-- Dynamic Background -->
-        <div class="absolute inset-0 bg-gradient-to-b from-polygon-dark via-polygon-purple to-indigo-800"></div>
+        <!-- Background Image -->
+        <div class="absolute inset-0">
+          <img src="https://i.ibb.co/fdmPPYx2/MLM.png" alt="Crypto Real Estate Background" class="w-full h-full object-cover">
+          <div class="absolute inset-0 bg-gradient-to-b from-polygon-dark/70 via-polygon-purple/50 to-indigo-800/70"></div>
+        </div>
         
         <!-- Pattern Overlay -->
         <div class="absolute inset-0 opacity-10">
@@ -13,59 +16,31 @@ export function loadHomePage(container: HTMLElement): void {
         
         <!-- Hero Content -->
         <div class="relative z-10 flex flex-col items-center justify-center min-h-screen px-4 sm:px-6 lg:px-8 py-20 md:py-28">
-          <!-- Logo Animation -->
-          <div class="w-full max-w-4xl mb-10 fade-in-up">
-            <div class="rounded-2xl bg-black bg-opacity-30 backdrop-blur-md p-7 shadow-lg inline-block w-full border border-white border-opacity-10">
-              <svg viewBox="0 0 600 140" xmlns="http://www.w3.org/2000/svg" class="w-full">
-                <defs>
-                  <linearGradient id="titleGradient" x1="0%" y1="0%" x2="100%" y2="0%">
-                    <stop offset="0%" stop-color="#FFFFFF" />
-                    <stop offset="50%" stop-color="#F0F0F0" />
-                    <stop offset="100%" stop-color="#FFFFFF" />
-                    <animate attributeName="x1" from="0%" to="100%" dur="3s" repeatCount="indefinite" />
-                    <animate attributeName="x2" from="100%" to="200%" dur="3s" repeatCount="indefinite" />
-                  </linearGradient>
-                  
-                  <!-- City skyline pattern -->
-                  <pattern id="cityPattern" x="0" y="0" width="600" height="100" patternUnits="userSpaceOnUse">
-                    ${Array(15).fill(0).map((_, i) => 
-                      `<rect x="${40 + i*40}" y="${20 + Math.floor(Math.random()*50)}" width="${20 + Math.floor(Math.random()*20)}" 
-                      height="${60 + Math.floor(Math.random()*40)}" fill="white" opacity="0.2" class="building-rect" 
-                      style="animation-delay: ${i*0.1}s" />`
-                    ).join('')}
-                  </pattern>
-                </defs>
-                
-                <!-- Background Pattern -->
-                <rect x="0" y="40" width="600" height="100" fill="url(#cityPattern)" />
-                
-                <!-- Main Title with Effects -->
-                <text x="300" y="80" font-family="Inter, sans-serif" font-weight="800" font-size="50" text-anchor="middle" 
-                fill="url(#titleGradient)" class="text-glow">CRYPTO REALESTATE</text>
-                <text x="300" y="115" font-family="Inter, sans-serif" font-size="20" text-anchor="middle" 
-                fill="white" font-weight="500" class="text-shadow-sm">VIRTUAL PROPERTY · REAL EARNINGS</text>
-              </svg>
-            </div>
+          <!-- Main Content - Title and Description Text -->
+          <div class="mt-8 max-w-3xl mx-auto fade-in-up bg-black bg-opacity-40 rounded-xl p-6 backdrop-blur-sm border border-white/10" style="animation-delay: 0.5s">
+            <h1 class="text-5xl md:text-6xl font-extrabold text-white text-center mb-2">
+              CRYPTO REAL ESTATE
+            </h1>
+            <p class="text-xl text-white text-opacity-90 text-center mb-6">
+              VIRTUAL PROPERTIES · REAL EARNINGS
+            </p>
+            
+            <p class="text-xl text-white text-opacity-90 text-center mb-4">
+              Grow your virtual real estate empire by renting apartments with sublet rights. Build your network of real estate agents with our powerful 3x8 matrix structure with spillover and create a passive income stream helping them.
+            </p>
+            
+            <p class="text-2xl font-bold text-white text-center mb-6">
+              A Real Estate virtual NFT that actually makes you money.
+            </p>
           </div>
           
-          <!-- Main Headline -->
-          <h1 class="text-4xl md:text-5xl lg:text-7xl font-extrabold tracking-tight text-white text-center max-w-5xl fade-in-up text-shadow-lg" style="animation-delay: 0.3s">
-            <span class="block mb-4">Build Your <span class="text-gradient bg-clip-text text-transparent bg-gradient-to-r from-white to-purple-100">Virtual Real Estate</span> Empire</span>
-            <span class="block text-white text-opacity-80 text-2xl md:text-3xl lg:text-4xl mt-3 font-light">The Future of Property Investment on Blockchain</span>
-          </h1>
-          
-          <!-- Description -->
-          <p class="mt-8 max-w-2xl mx-auto text-xl text-white text-opacity-90 text-center fade-in-up text-shadow-sm" style="animation-delay: 0.5s">
-            Join the next revolution in digital property ownership. Build your network with our powerful 3x8 matrix structure with spillover and create a passive income stream.
-          </p>
-          
           <!-- CTA Buttons -->
-          <div class="mt-12 max-w-sm mx-auto sm:max-w-none sm:flex sm:justify-center gap-6 fade-in-up" style="animation-delay: 0.7s">
+          <div class="mt-8 max-w-sm mx-auto sm:max-w-none sm:flex sm:justify-center gap-6 fade-in-up" style="animation-delay: 0.7s">
             <a href="#" id="home-register-button" class="flex items-center justify-center px-8 py-4 text-lg font-bold rounded-xl shadow-lg text-polygon-purple bg-white hover:bg-gray-100 transform hover:scale-105 transition-all duration-300">
               <svg class="w-6 h-6 mr-2" fill="currentColor" viewBox="0 0 20 20" xmlns="http://www.w3.org/2000/svg">
                 <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm1-11a1 1 0 10-2 0v2H7a1 1 0 100 2h2v2a1 1 0 102 0v-2h2a1 1 0 100-2h-2V7z" clip-rule="evenodd"></path>
               </svg>
-              Start Earning Now
+              Join the game now
             </a>
             <a href="#" id="home-learn-button" class="flex items-center justify-center px-8 py-4 text-lg font-bold rounded-xl shadow-lg text-white bg-white bg-opacity-10 border-2 border-white border-opacity-20 backdrop-blur-sm hover:bg-opacity-20 transform hover:scale-105 transition-all duration-300">
               <svg class="w-6 h-6 mr-2" fill="currentColor" viewBox="0 0 20 20" xmlns="http://www.w3.org/2000/svg">
@@ -75,11 +50,20 @@ export function loadHomePage(container: HTMLElement): void {
             </a>
           </div>
 
-          <!-- Trusted By Section (Replacing Stats Counter) -->
-          <div class="mt-16 max-w-5xl w-full px-4 fade-in-up" style="animation-delay: 0.9s">
-            <p class="text-center text-white text-opacity-60 text-sm uppercase tracking-wider mb-6">Powered by advanced blockchain technology</p>
-            
-          </div>
+          <!-- Support Links -->
+          <div class="mt-12 py-3 px-6 bg-black/30 backdrop-blur-sm rounded-full flex flex-wrap justify-center gap-6 text-white fade-in-up" style="animation-delay: 0.9s">
+            <a href="#" id="home-faq-link" class="text-white hover:text-purple-200 transition-colors">
+              FAQ
+            </a>
+           
+            <span class="text-gray-400">•</span>
+            <a href="https://t.me/+5aATGQKT0NE0ZDJk" target="_blank" class="text-white hover:text-purple-200 transition-colors flex items-center">
+              <svg class="w-4 h-4 mr-1" viewBox="0 0 24 24" fill="currentColor">
+                <path d="M12 0C5.373 0 0 5.373 0 12s5.373 12 12 12 12-5.373 12-12S18.627 0 12 0zm0 2c5.514 0 10 4.486 10 10s-4.486 10-10 10S2 17.514 2 12 6.486 2 12 2zm2.505 15.578l-.921-4.518 4.948-4.445c.217-.198-.047-.302-.337-.113l-6.109 3.862-2.631-.878c-.57-.181-.579-.637.126-.953l10.266-4.277c.469-.204.887.153.721.847l-1.748 8.858c-.123.619-.463.768-.953.478l-2.637-1.955-1.267 1.246c-.14.14-.257.257-.458.257z" />
+              </svg>
+              Help & Support
+            </a>
+           
         </div>
         
         <!-- Scroll Indicator -->
@@ -119,7 +103,6 @@ export function loadHomePage(container: HTMLElement): void {
                       <p class="text-white text-opacity-90 text-sm">Begin your earning journey</p>
                     </div>
                   </div>
-                </div>
                 <div class="p-6 bg-white border border-gray-100 rounded-b-xl">
                   <div class="flex justify-between items-center">
                     <div>
@@ -348,6 +331,15 @@ export function loadHomePage(container: HTMLElement): void {
     learnButton.addEventListener("click", (e) => {
       e.preventDefault();
       localStorage.setItem("activePage", "how-it-works");
+      window.dispatchEvent(new Event("navigate"));
+    });
+  }
+  
+  const faqLink = document.getElementById("home-faq-link");
+  if (faqLink) {
+    faqLink.addEventListener("click", (e) => {
+      e.preventDefault();
+      localStorage.setItem("activePage", "faq");
       window.dispatchEvent(new Event("navigate"));
     });
   }

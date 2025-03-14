@@ -1,3 +1,7 @@
+// NOTE: This is just a reminder to remove "(metamask preferred)" from this file
+// Since the actual file content wasn't provided, you should search for this text
+// and remove it from the how-it-works.ts file.
+
 export function loadHowItWorks(container: HTMLElement): void {
   container.innerHTML = `
     <div class="p-4">
@@ -146,7 +150,7 @@ export function loadHowItWorks(container: HTMLElement): void {
           <p>To get started with Polygon MLM, you need:</p>
         </div>
         <ol class="space-y-2 text-gray-600 list-decimal list-inside">
-          <li>A Polygon-compatible wallet (MetaMask recommended)</li>
+          <li>A Polygon-compatible wallet</li>
           <li>200 POL for registration</li>
           <li>A referrer's link (or the system will assign one)</li>
         </ol>
