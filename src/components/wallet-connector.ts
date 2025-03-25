@@ -1,3 +1,7 @@
+/**
+ * Wallet Connector Component
+ * Provides utilities for connecting to different wallet providers
+ */
 import { showErrorToast, showInfoToast } from './toast-notification';
 
 export interface WalletProvider {
@@ -111,6 +115,9 @@ const walletProviders: WalletProvider[] = [
 
 let selectedProvider: WalletProvider | null = null;
 
+/**
+ * Show wallet connection modal and return connected address
+ */
 export async function showWalletConnectModal(): Promise<string | null> {
   return new Promise((resolve) => {
     // Hide any existing loading overlay first to prevent multiple overlays
@@ -262,6 +269,9 @@ export async function showWalletConnectModal(): Promise<string | null> {
   });
 }
 
+/**
+ * Create a wallet option element
+ */
 function createWalletOption(wallet: WalletProvider): HTMLDivElement {
   const walletOption = document.createElement('div');
   walletOption.className = 'flex items-center p-3 rounded-lg border border-gray-200 hover:bg-gray-50 cursor-pointer transition-colors';
@@ -312,9 +322,19 @@ function createWalletOption(wallet: WalletProvider): HTMLDivElement {
   return walletOption;
 }
 
+/**
+ * Get the currently selected wallet provider
+ */
 export function getSelectedProvider(): WalletProvider | null {
   return selectedProvider;
 }
 
-// Rather than extending Window interface directly here, we'll just use type assertions
-// This avoids the duplicate declaration error with app.ts
+/**
+ * Close the wallet selection modal
+ */
+export function closeWalletModal(): void {
+  const modalOverlay = document.getElementById('wallet-connect-modal-overlay');
+  if (modalOverlay) {
+    modalOverlay.remove();
+  }
+}

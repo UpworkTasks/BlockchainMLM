@@ -4,17 +4,30 @@
  */
 
 /**
- * Shows a loading overlay with a custom message
- * @param message The message to display in the loading overlay
+ * Show loading overlay with optional message
+ * @param message - Message to display in the loading overlay
  */
-export function showLoadingOverlay(message: string = "Loading..."): void {
-  const existingOverlay = document.getElementById('loading-overlay');
+export function showLoadingOverlay(message?: string): void {
+  const loadingOverlay = document.getElementById('loading-overlay');
   
-  if (existingOverlay) {
-    // Update existing overlay
-    const messageElement = existingOverlay.querySelector('p');
-    if (messageElement) messageElement.textContent = message;
-    existingOverlay.style.display = 'flex';
+  if (loadingOverlay) {
+    // Add message if provided
+    if (message) {
+      const messageElement = document.createElement('p');
+      messageElement.className = 'text-white mt-4 text-lg';
+      messageElement.textContent = message;
+      
+      // Clear any existing messages
+      const existingMessage = loadingOverlay.querySelector('p');
+      if (existingMessage) {
+        existingMessage.remove();
+      }
+      
+      // Add new message
+      loadingOverlay.querySelector('.text-center')?.appendChild(messageElement);
+    }
+    
+    loadingOverlay.style.display = 'flex';
   } else {
     // Create new overlay if it doesn't exist
     const overlay = document.createElement('div');
@@ -37,11 +50,18 @@ export function showLoadingOverlay(message: string = "Loading..."): void {
 }
 
 /**
- * Hides the loading overlay if it exists
+ * Hide loading overlay
  */
 export function hideLoadingOverlay(): void {
-  const overlay = document.getElementById('loading-overlay');
-  if (overlay) {
-    overlay.style.display = 'none';
+  const loadingOverlay = document.getElementById('loading-overlay');
+  
+  if (loadingOverlay) {
+    loadingOverlay.style.display = 'none';
+    
+    // Clear any messages
+    const messageElement = loadingOverlay.querySelector('p');
+    if (messageElement) {
+      messageElement.remove();
+    }
   }
 }

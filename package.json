@@ -1,7 +1,7 @@
 {
   "name": "blockchain-mlm",
   "version": "1.0.0",
-  "description": "Multi-Level Marketing smart contract on Polygon",
+  "description": "Crypto RealEstate - Virtual Property MLM Platform",
   "main": "index.js",
   "scripts": {
     "compile": "hardhat compile",
@@ -17,7 +17,8 @@
     "node": "hardhat node",
     "dev": "vite",
     "build": "tsc && vite build",
-    "preview": "vite preview"
+    "preview": "vite preview",
+    "build:css": "tailwindcss -i ./src/input.css -o ./dist/output.css --watch"
   },
   "keywords": [
     "blockchain",
