@@ -201,11 +201,36 @@ export class ContractInteractor {
         return false;
       }
 
+      // Add specific handling for Leap Wallet
+      const provider = this.signer.provider;
+      const extendedProvider = provider as any;
+      if (extendedProvider?.provider?.isLeap) {
+        // Force chain ID for Leap
+        await (extendedProvider.provider as any).request({
+          method: 'wallet_switchEthereumChain',
+          params: [{ chainId: '0x89' }], // Polygon Mainnet
+        });
+      }
+
       this.contract = new ethers.Contract(
         network.contractAddress,
         contractABI,
         this.signer
       );
+
+      // Verify contract connection
+      try {
+        await this.contract.getOwner();
+      } catch (error) {
+        console.error('Contract verification failed:', error);
+        // Attempt recovery by reinitializing the contract
+        await new Promise(resolve => setTimeout(resolve, 1000));
+        this.contract = new ethers.Contract(
+          network.contractAddress,
+          contractABI,
+          this.signer
+        );
+      }
 
       return true;
     } catch (error) {
@@ -316,125 +341,62 @@ export class ContractInteractor {
         return false;
       }
 
-      // Check if user is already registered before attempting registration
-      try {
-        if (!this.signer) {
-          showErrorToast("Wallet not connected");
-          return false;
-        }
-        
-        const address = await this.signer.getAddress();
-        const userDetails = await this.getUserDetails(address);
-        
-        if (userDetails && userDetails.registered) {
-          console.log('User is already registered');
-          sessionStorage.setItem('isRegistered', 'true');
-          showInfoToast("You are already registered in the MLM system");
-          return true; // Return true since the user is already in a valid registered state
-        }
-        
-        // PRE-CHECK: Check if the user has enough balance to complete the registration
-        if (this.provider) {
-          try {
-            const balance = await this.provider.getBalance(address);
-            const requiredAmount = ethers.parseEther("200"); // 200 POL for registration
-            const estimatedGas = ethers.parseEther("0.01"); // Rough estimate for gas
-            const totalRequired = requiredAmount + estimatedGas;
-            
-            if (balance < totalRequired) {
-              const formattedRequired = ethers.formatEther(requiredAmount);
-              const formattedBalance = ethers.formatEther(balance);
-              
-              showErrorToast(
-                `Insufficient funds to register. You need at least ${formattedRequired} MATIC for registration plus gas.` +
-                ` Your current balance is ${formattedBalance} MATIC.`
-              );
-              return false;
-            }
-            
-            console.log(`User has sufficient balance: ${ethers.formatEther(balance)} MATIC`);
-          } catch (balanceError) {
-            console.error("Failed to check balance:", balanceError);
-            // Continue with transaction attempt even if balance check fails
-          }
-        }
-        
-      } catch (checkError) {
-        console.log('Error checking registration status:', checkError);
-        showErrorToast("Error checking registration status: " + (checkError instanceof Error ? checkError.message : "Unknown error"));
-      }
-
-      // If we get here, the user is not registered, so proceed with registration
-      showInfoToast("Please confirm the transaction in your wallet...");
-      
-      try {
-        // Explicitly set gas limit to avoid estimation failures
-        const gasLimit = 300000; // Safe gas limit for registration
-        
-        const tx = await this.contract.register(referrerAddress, {
-          value: ethers.parseEther("200"),
-          gasLimit: gasLimit
-        });
-        
-        showInfoToast("Transaction submitted, waiting for confirmation...");
-        await tx.wait();
-        
-        // Update session storage upon successful registration
-        sessionStorage.setItem('isRegistered', 'true');
-        showSuccessToast("Registration successful! Welcome to the MLM system.");
-        return true;
-      } catch (txError: any) {
-        // Extract and display the specific error message
-        console.error('Transaction error:', txError);
-        
-        // Improved error handling with more specific messages
-        if (txError.shortMessage?.includes("insufficient funds") || 
-            txError.message?.includes("insufficient funds") ||
-            txError.code === "INSUFFICIENT_FUNDS") {
-          showErrorToast(
-            "Registration failed: You don't have enough MATIC in your wallet. " +
-            "You need 200 MATIC for registration plus additional MATIC for gas fees."
-          );
-        } else if (txError.message?.includes("estimate gas") || txError.code === "CALL_EXCEPTION") {
-          // This is likely an insufficient funds error that wasn't caught by the normal checks
-          showErrorToast(
-            "Transaction failed during gas estimation. This usually means you have insufficient funds. " +
-            "Please make sure you have at least 200.1 MATIC in your wallet."
-          );
-        } else if (txError.shortMessage?.includes("gas required exceeds allowance")) {
-          showErrorToast("Registration failed: Gas estimation error. You may have insufficient funds to pay for gas fees.");
-        } else if (txError.shortMessage?.includes("User already registered") || 
-                  txError.message?.includes("User already registered")) {
-          showInfoToast("You are already registered in the MLM system");
-          sessionStorage.setItem('isRegistered', 'true');
-          return true;
-        } else if (txError.code === 4001 || txError.message?.includes("rejected")) {
-          showErrorToast("Registration transaction was rejected. Please try again when you're ready.");
-        } else {
-          // Show actual error message instead of generic one
-          showErrorToast(`Registration failed: ${txError.shortMessage || txError.message || "Unknown error"}`);
-        }
+      if (!this.signer) {
+        showErrorToast("Wallet not connected");
         return false;
       }
-    } catch (error: any) {
-      console.error('Error registering user:', error);
+
+      const address = await this.signer.getAddress();
       
-      // More specific error handling
-      if (error.message?.includes("User already registered")) {
-        showInfoToast("You are already registered in the MLM system");
-        sessionStorage.setItem('isRegistered', 'true');
-        return true;
-      } else if (error.message?.includes("insufficient funds") || error.code === "INSUFFICIENT_FUNDS") {
-        showErrorToast(
-          "Registration failed: Insufficient funds. " +
-          "You need 200 MATIC for registration plus gas fees (approximately 0.1 MATIC)."
-        );
-      } else if (error.code === 4001) {
-        showErrorToast("Transaction rejected. Please try again if you want to register.");
-      } else {
-        showErrorToast(`Registration failed: ${error.shortMessage || error.message || "Unknown error"}`);
+      // Check balance first
+      try {
+        const balance = await this.provider?.getBalance(address);
+        const requiredAmount = ethers.parseEther("200");
+        const estimatedGas = ethers.parseEther("0.1");
+        const totalRequired = requiredAmount + estimatedGas;
+        
+        if (balance && balance < totalRequired) {
+          showErrorToast(`Insufficient funds. You need at least 200 MATIC plus gas fees.`);
+          return false;
+        }
+      } catch (balanceError) {
+        console.error("Balance check failed:", balanceError);
       }
+
+      // If referrerAddress is empty or zero address, proceed without referrer
+      if (!referrerAddress || referrerAddress === ethers.ZeroAddress) {
+        referrerAddress = ethers.ZeroAddress; // Ensure zero address for no referrer
+      } else {
+        // Only validate referrer if one was provided
+        try {
+          const referrerDetails = await this.getUserDetails(referrerAddress);
+          if (!referrerDetails?.registered) {
+            showErrorToast("Invalid referrer address. Please check the address or leave empty for no referrer.");
+            return false;
+          }
+        } catch (referrerError) {
+          console.error("Referrer check failed:", referrerError);
+          showErrorToast("Failed to validate referrer. You can leave it empty to join without a referrer.");
+          return false;
+        }
+      }
+
+      // Proceed with registration
+      showInfoToast("Please confirm the transaction in your wallet...");
       
+      const tx = await this.contract.register(referrerAddress, {
+        value: ethers.parseEther("200"),
+        gasLimit: 500000
+      });
+      
+      await tx.wait();
+      sessionStorage.setItem('isRegistered', 'true');
+      showSuccessToast("Registration successful! Welcome to the MLM system.");
+      return true;
+
+    } catch (error: any) {
+      console.error('Registration error:', error);
+      showErrorToast(error.message || "Registration failed. Please try again.");
       return false;
     }
   }

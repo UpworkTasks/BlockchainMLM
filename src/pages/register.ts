@@ -89,11 +89,11 @@ export async function loadRegisterPage(
           </div>
           
           <div>
-            <h4 class="font-bold mb-3">Referrer</h4>
+            <h4 class="font-bold mb-3">Referrer (Optional)</h4>
             <div id="referrer-container" class="mb-6">
-              <label class="block text-sm font-medium text-gray-700 mb-2">Referrer's Address (optional if you don't have one)</label>
-              <input id="referrer-address" type="text" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-polygon-purple focus:border-polygon-purple" placeholder="0x...">
-              <p class="mt-2 text-sm text-gray-600">Leave blank if you don't have a referrer.</p>
+              <label class="block text-sm font-medium text-gray-700 mb-2">Referrer's Address</label>
+              <input id="referrer-address" type="text" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-polygon-purple focus:border-polygon-purple" placeholder="Leave empty to join without referrer">
+              <p class="mt-2 text-sm text-gray-500">You can join with or without a referrer.</p>
             </div>
             
             <div class="flex flex-col sm:flex-row sm:justify-between gap-3 items-center">
@@ -172,27 +172,27 @@ export async function loadRegisterPage(
   const registerBtn = document.getElementById("register-button");
   if (registerBtn && currentUserAddress && !isRegistered) {
     registerBtn.addEventListener("click", async () => {
-      // Disable the button while processing
       registerBtn.setAttribute("disabled", "true");
       registerBtn.textContent = "Processing...";
       
       try {
         let referrerAddress = "";
         const referrerInput = document.getElementById("referrer-address") as HTMLInputElement;
+        
+        // Only validate referrer if address was entered
         if (referrerInput && referrerInput.value.trim()) {
-          // Basic validation for Ethereum addresses
           if (/^0x[a-fA-F0-9]{40}$/.test(referrerInput.value.trim())) {
             referrerAddress = referrerInput.value.trim();
           } else {
-            showErrorToast("Invalid referrer address format. Please use a valid Ethereum address.");
+            showErrorToast("Invalid referrer address format. Please use a valid address or leave empty.");
             registerBtn.removeAttribute("disabled");
             registerBtn.textContent = "Register Now";
             return;
           }
         }
         
-        // Call the contract method for registration
-        const success = await contractInteractor.registerUser(referrerAddress);
+        // Pass empty string or valid address to registerUser
+        const success = await contractInteractor.registerUser(referrerAddress || ethers.ZeroAddress);
         if (success) {
           // Update status and show success message
           showSuccessToast("Registration successful! Welcome to the MLM network!");
@@ -247,5 +247,48 @@ export async function loadRegisterPage(
         `;
       }
     }
+  }
+}
+
+async function enableRegisterButton(contractInteractor: ContractInteractor, address: string): Promise<void> {
+  const registerButton = document.getElementById('register-button') as HTMLButtonElement;
+  if (!registerButton) return;
+
+  try {
+    // Check balance
+    const provider = contractInteractor.provider;
+    if (!provider) {
+      registerButton.disabled = true;
+      return;
+    }
+
+    const balance = await provider.getBalance(address);
+    const requiredAmount = ethers.parseEther("200.1"); // 200 MATIC + 0.1 for gas
+    const hasEnoughBalance = balance >= requiredAmount;
+
+    // Update button state
+    registerButton.disabled = !hasEnoughBalance;
+    
+    // Update button text based on state
+    if (!hasEnoughBalance) {
+      const formattedBalance = ethers.formatEther(balance);
+      registerButton.textContent = `Insufficient Balance (${formattedBalance} MATIC)`;
+      registerButton.classList.add('bg-gray-400');
+      registerButton.classList.remove('bg-polygon-purple', 'hover:bg-polygon-dark');
+    } else {
+      registerButton.textContent = 'Register Now';
+      registerButton.classList.remove('bg-gray-400');
+      registerButton.classList.add('bg-polygon-purple', 'hover:bg-polygon-dark');
+    }
+
+    console.log('Register button state:', {
+      balance: ethers.formatEther(balance),
+      required: ethers.formatEther(requiredAmount),
+      hasEnough: hasEnoughBalance
+    });
+
+  } catch (error) {
+    console.error('Error checking balance for register button:', error);
+    registerButton.disabled = true;
   }
 }

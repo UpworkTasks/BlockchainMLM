@@ -84,27 +84,84 @@ const walletProviders: WalletProvider[] = [
     name: 'Leap Wallet',
     icon: 'https://chainbroker.io/_next/image/?url=https%3A%2F%2Fstatic.chainbroker.io%2Fmediafiles%2Fprojects%2Fleap-wallet%2Fleap.jpeg&w=768&q=75',
     description: 'Connect to your Leap Wallet',
-    isInstalled: () => typeof window !== 'undefined' && !!window.leap,
+    isInstalled: () => {
+      // Check both for the window.leap and specifically for the ethereum provider
+      const hasLeap = typeof window !== 'undefined' && !!window.leap;
+      const hasEthereumProvider = hasLeap && !!window.leap.ethereum;
+      // Also check if the provider identifies itself as Leap
+      const isLeapProvider = hasEthereumProvider && (
+        window.leap.ethereum.isLeap || 
+        window.leap.ethereum.isLeapWallet || 
+        // Check if provider name contains 'leap' case insensitive
+        window.leap.ethereum?.provider?.name?.toLowerCase()?.includes('leap')
+      );
+      
+      console.log('Leap Wallet Detection:', {
+        hasLeap,
+        hasEthereumProvider,
+        isLeapProvider
+      });
+      
+      return isLeapProvider;
+    },
     connect: async () => {
-      if (typeof window === 'undefined' || !window.leap) {
-        window.open('https://www.leapwallet.io/', '_blank');
-        throw new Error('Leap Wallet is not installed');
+      // Check for Leap Wallet
+      if (typeof window === 'undefined' || !window.leap?.ethereum) {
+        window.open('https://www.leapwallet.io/download', '_blank');
+        throw new Error('Please install Leap Wallet to continue');
       }
       
       try {
-        // Enable the wallet
-        const accounts = await window.leap.enable();
-        return { provider: window.leap, accounts };
+        // Get the Leap provider
+        const provider = window.leap.ethereum;
+        
+        // Request chain switch first
+        try {
+          await provider.request({
+            method: 'wallet_switchEthereumChain',
+            params: [{ chainId: '0x89' }], // Polygon Mainnet
+          });
+        } catch (switchError: any) {
+          // Add chain if it doesn't exist
+          if (switchError.code === 4902) {
+            await provider.request({
+              method: 'wallet_addEthereumChain',
+              params: [{
+                chainId: '0x89',
+                chainName: 'Polygon Mainnet',
+                nativeCurrency: {
+                  name: 'MATIC',
+                  symbol: 'MATIC',
+                  decimals: 18
+                },
+                rpcUrls: ['https://polygon-rpc.com'],
+                blockExplorerUrls: ['https://polygonscan.com']
+              }]
+            });
+          }
+        }
+        
+        // Now request accounts
+        const accounts = await provider.request({ 
+          method: 'eth_requestAccounts'
+        });
+        
+        // Prevent events from propagating to MetaMask
+        provider.autoRefreshOnNetworkChange = false;
+        
+        return { provider, accounts };
       } catch (error) {
+        console.error('Leap connection error:', error);
         throw error;
       }
     },
-    provider: window.leap,
+    provider: window?.leap?.ethereum,
     getAccounts: async () => {
-      if (!window.leap) return [];
-      
+      if (!window.leap?.ethereum) return [];
       try {
-        return await window.leap.getAccounts();
+        return await window.leap.ethereum.request({ 
+          method: 'eth_accounts' 
+        });
       } catch (error) {
         console.error("Failed to get Leap Wallet accounts:", error);
         return [];
@@ -119,6 +176,12 @@ let selectedProvider: WalletProvider | null = null;
  * Show wallet connection modal and return connected address
  */
 export async function showWalletConnectModal(): Promise<string | null> {
+  // At the start of the function, remove any existing MetaMask events
+  if (window.ethereum?.removeAllListeners) {
+    window.ethereum.removeAllListeners('accountsChanged');
+    window.ethereum.removeAllListeners('chainChanged');
+  }
+
   return new Promise((resolve) => {
     // Hide any existing loading overlay first to prevent multiple overlays
     const existingOverlay = document.getElementById('loading-overlay');

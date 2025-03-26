@@ -59,8 +59,23 @@ export interface UIState {
 // Global type declarations
 declare global {
   interface Window {
-    ethereum: any;
+    ethereum?: any;
     deficonnect?: any;
-    leap?: any;
+    leap?: {
+      ethereum: {
+        isLeap?: boolean;
+        isLeapWallet?: boolean;
+        provider?: {
+          name?: string;
+        };
+        request: (args: { method: string; params?: any[] }) => Promise<any>;
+        on: (event: string, handler: (...args: any[]) => void) => void;
+        removeListener: (event: string, handler: (...args: any[]) => void) => void;
+        autoRefreshOnNetworkChange?: boolean;
+      };
+      enable: (chainId?: string) => Promise<void>;
+      getOfflineSignerAuto: (chainId: string) => any;
+      getKey: (chainId: string) => Promise<{ bech32Address: string }>;
+    };
   }
 }
